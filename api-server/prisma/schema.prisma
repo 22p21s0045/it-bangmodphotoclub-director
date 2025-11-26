@@ -8,52 +8,42 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String      @id @default(uuid())
+  email     String      @unique
   name      String?
   avatar    String?
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  photos    Photo[]
+  role      Role        @default(USER)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  auditLogs AuditLog[]
   joins     JoinEvent[]
+  photos    Photo[]
   badges    UserBadge[]
   level     UserLevel?
-  auditLogs AuditLog[]
-}
-
-enum Role {
-  USER
-  ADMIN
 }
 
 model Event {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  startDate   DateTime
-  endDate     DateTime
-  location    String?
-  coverImage  String?
-  joinLimit   Int      @default(0) // 0 means unlimited
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  photos Photo[]
-  joins  JoinEvent[]
+  id                 String      @id @default(uuid())
+  title              String
+  description        String?
+  eventDates         DateTime[]
+  location           String?
+  coverImage         String?
+  joinLimit          Int         @default(0)
+  submissionDeadline DateTime?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  joins              JoinEvent[]
+  photos             Photo[]
 }
 
 model JoinEvent {
-  id        String   @id @default(uuid())
-  userId    String
-  eventId   String
-  joinedAt  DateTime @default(now())
-
-  user  User  @relation(fields: [userId], references: [id])
-  event Event @relation(fields: [eventId], references: [id])
+  id       String   @id @default(uuid())
+  userId   String
+  eventId  String
+  joinedAt DateTime @default(now())
+  event    Event    @relation(fields: [eventId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, eventId])
 }
@@ -71,23 +61,20 @@ model Photo {
   isApproved   Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-
-  userId  String
-  eventId String
-
-  user  User  @relation(fields: [userId], references: [id])
-  event Event @relation(fields: [eventId], references: [id])
+  userId       String
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
 }
 
 model Badge {
-  id          String   @id @default(uuid())
+  id          String      @id @default(uuid())
   name        String
   description String
   iconUrl     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  users UserBadge[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  users       UserBadge[]
 }
 
 model UserBadge {
@@ -95,9 +82,8 @@ model UserBadge {
   userId    String
   badgeId   String
   awardedAt DateTime @default(now())
-
-  user  User  @relation(fields: [userId], references: [id])
-  badge Badge @relation(fields: [badgeId], references: [id])
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, badgeId])
 }
@@ -108,8 +94,7 @@ model UserLevel {
   exp       Int      @default(0)
   level     Int      @default(1)
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model AuditLog {
@@ -119,6 +104,10 @@ model AuditLog {
   details   Json?
   ipAddress String?
   createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+}
 
-  user User? @relation(fields: [userId], references: [id])
+enum Role {
+  USER
+  ADMIN
 }

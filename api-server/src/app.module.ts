@@ -5,7 +5,7 @@ import { MinioModule } from './modules/minio/minio.module';
 import { PhotosModule } from './modules/photos/photos.module';
 import { UsersModule } from './modules/users/users.module';
 import { EventsModule } from './modules/events/events.module';
-import { ImageWorker } from './queue/image.worker.ts';
+import { ImageWorker } from './queue/image.worker';
 
 @Module({
   imports: [

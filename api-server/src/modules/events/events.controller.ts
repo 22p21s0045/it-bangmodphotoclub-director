@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query } from '@nestjs/common';
 import { EventsService } from './events.service';
 
 @Controller('events')
@@ -11,7 +11,22 @@ export class EventsController {
   }
 
   @Get()
-  findAll() {
-    return this.eventsService.findAll();
+  findAll(@Query('search') search?: string, @Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
+    return this.eventsService.findAll(search, startDate, endDate);
+  }
+
+  @Get('locations')
+  getLocations() {
+    return this.eventsService.getLocations();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.eventsService.findOne(id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateEventDto: any) {
+    return this.eventsService.update(id, updateEventDto);
   }
 }

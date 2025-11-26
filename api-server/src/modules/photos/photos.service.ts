@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MinioService } from '../minio/minio.service';
-import { PrismaClient } from '@prisma/client'; // Should use a PrismaService
+import { PrismaClient } from '@prisma/client';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { CreatePhotoDto } from './dto/create-photo.dto';
@@ -23,16 +23,19 @@ export class PhotosService {
   async create(createPhotoDto: CreatePhotoDto) {
     const photo = await this.prisma.photo.create({
       data: {
-        ...createPhotoDto,
-        size: 0, // Placeholder
-        mimeType: 'image/jpeg', // Placeholder
+        eventId: createPhotoDto.eventId,
+        userId: createPhotoDto.userId,
+        filename: createPhotoDto.filename,
+        url: createPhotoDto.url,
+        size: 0,
+        mimeType: 'image/jpeg',
       },
     });
 
-    // Add to processing queue
-    await this.imageQueue.add('process', {
-      fileKey: createPhotoDto.url, // Assuming url is the key/path
+    // Queue image processing job
+    await this.imageQueue.add('process-image', {
       photoId: photo.id,
+      fileKey: createPhotoDto.filename,
     });
 
     return photo;
