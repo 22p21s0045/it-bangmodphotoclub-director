@@ -1,0 +1,6 @@
+export class CreatePhotoDto {
+  url: string;
+  filename: string;
+  userId: string;
+  eventId: string;
+}

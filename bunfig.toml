@@ -1,0 +1,2 @@
+[workspace]
+members = ["remix-app", "api-server", "shared"]

@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  photos    Photo[]
+  joins     JoinEvent[]
+  badges    UserBadge[]
+  level     UserLevel?
+  auditLogs AuditLog[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  location    String?
+  coverImage  String?
+  joinLimit   Int      @default(0) // 0 means unlimited
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  photos Photo[]
+  joins  JoinEvent[]
+}
+
+model JoinEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  eventId   String
+  joinedAt  DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
+}
+
+model Photo {
+  id           String   @id @default(uuid())
+  url          String
+  thumbnailUrl String?
+  filename     String
+  mimeType     String
+  size         Int
+  width        Int?
+  height       Int?
+  metadata     Json?
+  isApproved   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userId  String
+  eventId String
+
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+}
+
+model Badge {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  iconUrl     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(uuid())
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+}
+
+model UserLevel {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  exp       Int      @default(0)
+  level     Int      @default(1)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}

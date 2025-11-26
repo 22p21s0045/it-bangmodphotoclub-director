@@ -1,0 +1,19 @@
+{
+    "name": "it-bangmodphotoclub-director",
+    "version": "1.0.0",
+    "workspaces": [
+        "remix-app",
+        "api-server",
+        "shared"
+    ],
+    "scripts": {
+        "dev": "concurrently \"bun run infra:up\" \"bun run --cwd api-server start:dev\" \"bun run --cwd remix-app dev\"",
+        "infra:up": "docker-compose up -d",
+        "infra:down": "docker-compose down",
+        "lint": "bun run --cwd api-server lint && bun run --cwd remix-app lint",
+        "build": "bun run --cwd api-server build && bun run --cwd remix-app build"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}
