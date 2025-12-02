@@ -17,7 +17,10 @@
         "test:watch": "bun test --watch",
         "test:cov": "bun test --coverage",
         "test:debug": "bun test --inspect-brk",
-        "test:e2e": "bun test --config ./test/jest-e2e.json"
+        "test:e2e": "bun test --config ./test/jest-e2e.json",
+        "migrate:dev": "bunx prisma migrate dev",
+        "migrate:deploy": "bunx prisma migrate deploy",
+        "migrate:reset": "bunx prisma migrate reset"
     },
     "dependencies": {
         "@nestjs/bullmq": "^11.0.4",

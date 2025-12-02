@@ -8,6 +8,7 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 import { QueryProvider } from "~/providers/query-provider";
+import { Layout } from "~/components/layout";
 import styles from "~/styles/tailwind.css?url";
 
 export const links: LinksFunction = () => [
@@ -28,7 +29,9 @@ export default function App() {
       </head>
       <body className="font-noto-thai">
         <QueryProvider>
-          <Outlet />
+          <Layout>
+            <Outlet />
+          </Layout>
         </QueryProvider>
         <ScrollRestoration />
         <Scripts />

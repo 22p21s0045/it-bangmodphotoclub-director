@@ -30,6 +30,7 @@ model Event {
   location           String?
   coverImage         String?
   joinLimit          Int         @default(0)
+  activityHours      Int         @default(0)
   submissionDeadline DateTime?
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt

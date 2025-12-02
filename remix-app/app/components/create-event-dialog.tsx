@@ -100,6 +100,16 @@ export function CreateEventDialog() {
                 placeholder="0 = ไม่จำกัด"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="activityHours">จำนวนชั่วโมงกิจกรรม</Label>
+              <Input
+                id="activityHours"
+                name="activityHours"
+                type="number"
+                min="0"
+                placeholder="0 = ไม่มี"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

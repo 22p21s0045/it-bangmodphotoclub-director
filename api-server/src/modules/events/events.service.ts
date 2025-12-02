@@ -15,6 +15,9 @@ export class EventsService {
     if (data.submissionDeadline) {
       data.submissionDeadline = new Date(data.submissionDeadline);
     }
+    if (data.activityHours) {
+      data.activityHours = Number(data.activityHours);
+    }
     return this.prisma.event.create({ data });
   }
 
@@ -70,6 +73,9 @@ export class EventsService {
     }
     if (data.submissionDeadline) {
       data.submissionDeadline = new Date(data.submissionDeadline);
+    }
+    if (data.activityHours) {
+      data.activityHours = Number(data.activityHours);
     }
     
     try {
