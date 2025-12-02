@@ -1,3 +1,4 @@
+import { useLocation } from "@remix-run/react";
 import { Sidebar } from "./sidebar";
 
 interface LayoutProps {
@@ -5,6 +6,13 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
+  const location = useLocation();
+  const isLoginPage = location.pathname.startsWith("/auth/login");
+
+  if (isLoginPage) {
+    return <div className="min-h-screen w-full">{children}</div>;
+  }
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       <Sidebar />
