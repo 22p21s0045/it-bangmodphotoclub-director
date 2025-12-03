@@ -8,9 +8,9 @@ build/
 .cache/
 
 # Environment variables
-.env
-.env.*
-!.env.example
+# .env
+# .env.*
+# !.env.example
 
 # OS metadata
 .DS_Store

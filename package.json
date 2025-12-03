@@ -1,30 +1,22 @@
 {
   "name": "it-bangmodphotoclub-director",
   "version": "1.0.0",
-
   "workspaces": [
     "remix-app",
     "api-server",
     "shared"
   ],
-
   "scripts": {
-    "dev": "bun run infra:up && bun run migrate && concurrently \"bun run api\" \"bun run ui\"",
-
+    "dev": "bun run --env-file=.env.development infra:up && bun run --env-file=.env.development migrate && concurrently \"bun run --env-file=.env.development api\" \"bun run --env-file=.env.development ui\"",
     "api": "bun run --cwd api-server start:dev",
     "ui": "bun run --cwd remix-app dev",
-
     "migrate": "bun run wait:db && bun run --cwd api-server migrate:dev",
-
     "wait:db": "bunx wait-on tcp:localhost:5432",
-
     "infra:up": "docker-compose up -d",
     "infra:down": "docker-compose down",
-
     "lint": "bun run --cwd api-server lint && bun run --cwd remix-app lint",
     "build": "bun run --cwd api-server build && bun run --cwd remix-app build"
   },
-
   "devDependencies": {
     "concurrently": "^8.2.2",
     "wait-on": "^7.0.1"
