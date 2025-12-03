@@ -8,17 +8,10 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "~/componen
 import { useState, useEffect } from "react";
 
 export async function action({ request }: ActionFunctionArgs) {
-  try {
-    await authenticator.authenticate("user-pass", request);
-    // If we get here, authentication was successful (but usually it throws a redirect if options are passed, here we handle it manually)
-    // Actually, without options, it returns the user.
-    return redirect("/");
-  } catch (error) {
-    // If the strategy throws a Response (redirect), re-throw it
-    if (error instanceof Response) throw error;
-    // Otherwise handle error (e.g. invalid credentials)
-    return redirect("/auth/login");
-  }
+  return authenticator.authenticate("user-pass", request, {
+    successRedirect: "/",
+    failureRedirect: "/auth/login",
+  });
 }
 
 export default function Login() {
@@ -113,28 +106,7 @@ export default function Login() {
             </Button>
           </Form>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-zinc-200" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-muted-foreground">
-                หรือ
-              </span>
-            </div>
-          </div>
-
-          <Form action="/auth/microsoft" method="post">
-            <Button variant="outline" type="submit" className="w-full border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900">
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg">
-                <path fill="#f35325" d="M1 1h10v10H1z"/>
-                <path fill="#81bc06" d="M12 1h10v10H12z"/>
-                <path fill="#05a6f0" d="M1 12h10v10H1z"/>
-                <path fill="#ffba08" d="M12 12h10v10H12z"/>
-              </svg>
-              เข้าสู่ระบบด้วย Microsoft
-            </Button>
-          </Form>
+{/* Microsoft login removed */}
 
           <p className="px-8 text-center text-sm text-muted-foreground">
             ยังไม่มีบัญชี?{" "}
