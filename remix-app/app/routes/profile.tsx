@@ -1,15 +1,16 @@
 import { json, LoaderFunctionArgs, ActionFunctionArgs, redirect } from "@remix-run/node";
 import { useLoaderData, useActionData, Form, useNavigation } from "@remix-run/react";
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { sessionStorage } from "~/session.server";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-// import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import { CheckCircle2, AlertCircle, Camera } from "lucide-react";
+import { ImageCropper } from "~/components/image-cropper";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await sessionStorage.getSession(request.headers.get("Cookie"));
@@ -86,48 +87,48 @@ export default function Profile() {
 
   const [avatarPreview, setAvatarPreview] = useState(user.avatar);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Cropper state
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    
-    const file = e.target.files[0];
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        setSelectedImage(reader.result as string);
+        setCropperOpen(true);
+      });
+      reader.readAsDataURL(file);
+      // Reset input so same file can be selected again
+      e.target.value = "";
+    }
+  };
+
+  const handleCropConfirm = async (croppedImageBlob: Blob) => {
     setIsUploading(true);
-
     try {
       const backendUrl = "http://localhost:3000";
+      const filename = `avatar-${Date.now()}.jpg`;
+      const file = new File([croppedImageBlob], filename, { type: "image/jpeg" });
       
       // 1. Get Presigned URL
       const { data } = await axios.post(`${backendUrl}/users/avatar/upload-url`, {
-        filename: file.name,
+        filename: filename,
         userId: user.id,
       });
 
       // 2. Upload to MinIO
       await axios.put(data.url, file, {
         headers: {
-          'Content-Type': file.type,
+          'Content-Type': 'image/jpeg',
         },
       });
 
-      // 3. Update Preview and Hidden Input
-      // The path returned from backend is relative to bucket, we need full URL if accessing directly or just path if proxying
-      // Assuming we can use the path directly if we have a way to serve it, or we construct the URL
-      // For now, let's assume the backend returns a usable path or we construct it.
-      // Actually, Minio usually needs a signed GET url or a public bucket.
-      // Let's assume public bucket for avatars or we use the path.
-      // Ideally we should use the full URL.
-      
-      // Since we don't have a public URL easily without configuration, let's try to use the path and assume the frontend knows how to display it 
-      // OR better, let's ask the backend for the public URL or just use the path if it's a public bucket.
-      // Given the previous code used `data.path`, let's use that.
-      
-      // Wait, the previous code in events.$id.upload.tsx used `data.path` to save to DB.
-      // Here we want to update the input value so when form submits, it saves the new URL.
-      
-      // Let's construct a public URL if possible, or just use the path if the app handles it.
-      // For Minio localhost:9000/photos/...
-      
-      const publicUrl = `http://localhost:9000/photos/${data.path}`;
+      // 3. Update Preview
+      const publicUrl = `http://localhost:9000/photos/${data.path}?t=${new Date().getTime()}`;
       setAvatarPreview(publicUrl);
       
     } catch (error) {
@@ -170,12 +171,34 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex flex-col items-center justify-center gap-4 mb-6">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={avatarPreview} />
-                <AvatarFallback className="text-2xl bg-slate-300">
-                  {user.name?.charAt(0).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                <Avatar className="h-32 w-32 border-4 border-white shadow-lg group-hover:opacity-90 transition-opacity">
+                  <AvatarImage src={avatarPreview} className="object-cover" />
+                  <AvatarFallback className="text-4xl bg-slate-300">
+                    {user.name?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera className="text-white w-8 h-8" />
+                </div>
+                {isUploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-full">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">คลิกที่รูปเพื่อเปลี่ยนรูปโปรไฟล์</p>
+              
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                className="hidden" 
+                accept="image/*"
+                onChange={handleFileSelect}
+              />
+              
+              {/* Hidden input to store the avatar URL for form submission */}
+              <input type="hidden" name="avatar" value={avatarPreview || ""} />
             </div>
 
             <div className="space-y-2">
@@ -186,27 +209,6 @@ export default function Profile() {
                 defaultValue={user.name} 
                 required 
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="avatar">รูปโปรไฟล์</Label>
-              <div className="flex gap-2">
-                <Input 
-                  id="avatar" 
-                  name="avatar" 
-                  value={avatarPreview} 
-                  onChange={(e) => setAvatarPreview(e.target.value)}
-                  placeholder="https://example.com/avatar.jpg"
-                  className="hidden"
-                />
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  disabled={isUploading}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">อัปโหลดรูปภาพ (JPG, PNG)</p>
             </div>
 
             <div className="space-y-2">
@@ -252,6 +254,13 @@ export default function Profile() {
           </CardFooter>
         </Card>
       </Form>
+
+      <ImageCropper 
+        open={cropperOpen}
+        onOpenChange={setCropperOpen}
+        imageSrc={selectedImage}
+        onConfirm={handleCropConfirm}
+      />
     </div>
   );
 }

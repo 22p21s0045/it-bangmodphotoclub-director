@@ -28,9 +28,23 @@ export class MinioService implements OnModuleInit {
     try {
       const exists = await this.minioClient.bucketExists(this.bucketName);
       if (!exists) {
-        await this.minioClient.makeBucket(this.bucketName, 'us-east-1'); // Region is required but often ignored by MinIO
+        await this.minioClient.makeBucket(this.bucketName, 'us-east-1');
         console.log(`Bucket ${this.bucketName} created.`);
       }
+
+      // Set public policy
+      const policy = {
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Effect: 'Allow',
+            Principal: { AWS: ['*'] },
+            Action: ['s3:GetObject'],
+            Resource: [`arn:aws:s3:::${this.bucketName}/*`],
+          },
+        ],
+      };
+      await this.minioClient.setBucketPolicy(this.bucketName, JSON.stringify(policy));
     } catch (err) {
       console.error('Error checking/creating bucket:', err);
     }
