@@ -11,6 +11,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { MultiDatePicker } from "~/components/multi-date-picker";
 import { DatePicker } from "~/components/date-picker";
 import { LocationAutocomplete } from "~/components/location-autocomplete";
@@ -125,6 +132,21 @@ export function EditEventDialog({ event }: EditEventDialogProps) {
                 placeholder="0 = ไม่จำกัด"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="status">สถานะ</Label>
+            <Select name="status" defaultValue={event.status || "UPCOMING"}>
+              <SelectTrigger>
+                <SelectValue placeholder="เลือกสถานะ" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="UPCOMING">กำลังหาคน</SelectItem>
+                <SelectItem value="PENDING_RAW">รอไฟล์ RAW</SelectItem>
+                <SelectItem value="PENDING_EDIT">รอแต่งรูป</SelectItem>
+                <SelectItem value="COMPLETED">เสร็จสิ้น</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

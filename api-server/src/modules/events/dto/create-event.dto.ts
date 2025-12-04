@@ -1,4 +1,4 @@
-import { IsArray, IsDateString, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsArray, IsDateString, IsInt, IsOptional, IsString, Min, IsEnum } from 'class-validator';
 
 export class CreateEventDto {
   @IsString()
@@ -30,4 +30,8 @@ export class CreateEventDto {
   @IsDateString()
   @IsOptional()
   submissionDeadline?: string;
+
+  @IsOptional()
+  @IsEnum(['UPCOMING', 'PENDING_RAW', 'PENDING_EDIT', 'COMPLETED'])
+  status?: 'UPCOMING' | 'PENDING_RAW' | 'PENDING_EDIT' | 'COMPLETED';
 }

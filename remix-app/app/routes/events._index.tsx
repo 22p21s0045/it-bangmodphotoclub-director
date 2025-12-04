@@ -9,6 +9,7 @@ import { th } from "date-fns/locale";
 import { Search } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/badge";
 import { Card, CardContent } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
 import { DatePicker } from "~/components/date-picker";
@@ -138,6 +139,7 @@ export default function Events() {
                       <TableHead>วันที่จัดงาน</TableHead>
                       <TableHead>สถานที่</TableHead>
                       <TableHead>จำนวนที่ต้องการ</TableHead>
+                      <TableHead>สถานะ</TableHead>
                       <TableHead>ผู้รับผิดชอบ</TableHead>
                       <TableHead className="text-right">จัดการ</TableHead>
                     </TableRow>
@@ -177,6 +179,19 @@ export default function Events() {
                         <TableCell>{event.location || "-"}</TableCell>
                         <TableCell>
                           {event.joinLimit > 0 ? `${event.joinLimit} คน` : "ไม่จำกัด"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            event.status === 'COMPLETED' ? 'default' :
+                            event.status === 'PENDING_EDIT' ? 'secondary' :
+                            event.status === 'PENDING_RAW' ? 'outline' :
+                            'destructive'
+                          }>
+                            {event.status === 'COMPLETED' ? 'เสร็จสิ้น' :
+                             event.status === 'PENDING_EDIT' ? 'รอแต่งรูป' :
+                             event.status === 'PENDING_RAW' ? 'รอไฟล์ RAW' :
+                             'กำลังหาคน'}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex -space-x-3 overflow-hidden p-1">

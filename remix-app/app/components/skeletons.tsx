@@ -12,6 +12,7 @@ export function EventListSkeleton() {
             <TableHead>วันที่จัดงาน</TableHead>
             <TableHead>สถานที่</TableHead>
             <TableHead>จำนวนที่ต้องการ</TableHead>
+            <TableHead>สถานะ</TableHead>
             <TableHead>ผู้รับผิดชอบ</TableHead>
             <TableHead className="text-right">จัดการ</TableHead>
           </TableRow>
@@ -33,6 +34,7 @@ export function EventListSkeleton() {
               </TableCell>
               <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
               <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
+              <TableCell><Skeleton className="h-6 w-[100px] rounded-full" /></TableCell>
               <TableCell>
                 <div className="flex -space-x-2">
                   <Skeleton className="h-8 w-8 rounded-full" />

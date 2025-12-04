@@ -37,6 +37,7 @@ model Event {
   submissionDeadline DateTime?
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
+  status             EventStatus @default(UPCOMING)
   joins              JoinEvent[]
   photos             Photo[]
 }
@@ -114,4 +115,11 @@ model AuditLog {
 enum Role {
   USER
   ADMIN
+}
+
+enum EventStatus {
+  UPCOMING
+  PENDING_RAW
+  PENDING_EDIT
+  COMPLETED
 }

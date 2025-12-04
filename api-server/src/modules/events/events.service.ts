@@ -16,6 +16,7 @@ export class EventsService {
       activityHours: data.activityHours,
       eventDates: data.eventDates ? data.eventDates.map((date) => new Date(date)) : [],
       submissionDeadline: data.submissionDeadline ? new Date(data.submissionDeadline) : null,
+      status: data.status,
     };
     return this.prisma.event.create({ data: eventData });
   }
@@ -86,6 +87,7 @@ export class EventsService {
       ...data,
       eventDates: data.eventDates ? data.eventDates.map((date) => new Date(date)) : undefined,
       submissionDeadline: data.submissionDeadline ? new Date(data.submissionDeadline) : undefined,
+      status: data.status,
     };
 
     try {
