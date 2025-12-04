@@ -27,6 +27,9 @@ export const loader = async ({ request }: { request: Request }) => {
   return { user };
 };
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export default function App() {
   return (
     <html lang="th">
@@ -42,6 +45,7 @@ export default function App() {
             <Outlet />
           </Layout>
         </QueryProvider>
+        <ToastContainer position="top-right" autoClose={3000} />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

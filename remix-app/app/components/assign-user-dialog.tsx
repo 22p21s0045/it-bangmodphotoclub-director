@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useFetcher } from "@remix-run/react";
+import { toast } from "react-toastify";
 import { Search, UserPlus, Check } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -72,8 +73,9 @@ export function AssignUserDialog({ eventId, joinedUserIds, onAssign }: AssignUse
   // Handle response
   useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data) {
-        if (fetcher.data.error) {
-            alert(fetcher.data.error); // Simple alert for now, can be improved with toast
+        const data = fetcher.data as any;
+        if (data.error) {
+            toast.error(data.error);
         } else {
             onAssign();
         }
