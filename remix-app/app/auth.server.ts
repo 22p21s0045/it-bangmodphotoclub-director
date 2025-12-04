@@ -15,7 +15,8 @@ authenticator.use(
     let password = form.get("password");
     
     try {
-        const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
+        let backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
+        backendUrl = backendUrl.replace("localhost", "127.0.0.1");
         const response = await fetch(`${backendUrl}/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

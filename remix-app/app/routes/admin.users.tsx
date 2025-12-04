@@ -42,16 +42,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Response("Unauthorized", { status: 401 });
   }
 
-  const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
-  const res = await axios.get(`${backendUrl}/users`);
-  
-  return json({ users: res.data, currentUser: user });
+  let backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
+  backendUrl = backendUrl.replace("localhost", "127.0.0.1");
+  console.log("Fetching users from:", backendUrl);
+  try {
+    const res = await axios.get(`${backendUrl}/users`);
+    return json({ users: res.data, currentUser: user });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
 }
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
-  const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
+  let backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
+  backendUrl = backendUrl.replace("localhost", "127.0.0.1");
 
   if (intent === "delete") {
     const userId = formData.get("userId");
