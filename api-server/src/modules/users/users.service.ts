@@ -31,7 +31,7 @@ export class UsersService {
     });
   }
 
-  async update(id: string, data: { name?: string; avatar?: string; password?: string; role?: 'USER' | 'ADMIN'; isActive?: boolean }) {
+  async update(id: string, data: { name?: string; avatar?: string; password?: string; role?: 'USER' | 'ADMIN'; isActive?: boolean; studentId?: string }) {
     const updateData: any = { ...data };
     
     if (data.password) {

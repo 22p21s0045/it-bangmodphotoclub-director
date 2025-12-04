@@ -33,13 +33,19 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const formData = await request.formData();
   const name = formData.get("name");
+  const studentId = formData.get("studentId") as string;
   const avatar = formData.get("avatar");
   const password = formData.get("password");
   const confirmPassword = formData.get("confirmPassword");
 
+  if (studentId && (!/^\d+$/.test(studentId) || studentId.length !== 11)) {
+    return json({ error: "รหัสนักศึกษาต้องเป็นตัวเลข 11 หลัก" }, { status: 400 });
+  }
+
   const updates: any = {};
 
   if (name && name !== user.name) updates.name = name;
+  if (studentId !== null && studentId !== user.studentId) updates.studentId = studentId;
   if (avatar && avatar !== user.avatar) updates.avatar = avatar;
   
   if (password) {
@@ -73,19 +79,21 @@ export async function action({ request }: ActionFunctionArgs) {
         } 
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to update profile", error);
-    return json({ error: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" }, { status: 500 });
+    const errorMessage = error.response?.data?.message || error.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
+    return json({ error: errorMessage }, { status: 500 });
   }
 }
 
 export default function Profile() {
   const { user } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+  const actionData = useActionData<typeof action>() as any;
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
   const [name, setName] = useState(user.name);
+  const [studentId, setStudentId] = useState(user.studentId || "");
   const [avatarPreview, setAvatarPreview] = useState(user.avatar);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -98,6 +106,7 @@ export default function Profile() {
 
   const isChanged = 
     name !== user.name || 
+    studentId !== (user.studentId || "") ||
     avatarPreview !== user.avatar || 
     password !== "" || 
     confirmPassword !== "";
@@ -151,7 +160,8 @@ export default function Profile() {
   useEffect(() => {
     setAvatarPreview(user.avatar);
     setName(user.name);
-  }, [user.avatar, user.name]);
+    setStudentId(user.studentId || "");
+  }, [user.avatar, user.name, user.studentId]);
 
   return (
     <div className="container mx-auto p-6 max-w-2xl">
@@ -220,6 +230,27 @@ export default function Profile() {
                 onChange={(e) => setName(e.target.value)}
                 required 
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="studentId">รหัสนักศึกษา</Label>
+              <Input 
+                id="studentId" 
+                name="studentId" 
+                value={studentId}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow only numbers and max 11 digits
+                  if (/^\d*$/.test(value) && value.length <= 11) {
+                    setStudentId(value);
+                  }
+                }}
+                placeholder="6xxxxxxxxxx"
+                maxLength={11}
+              />
+              <p className="text-xs text-muted-foreground">
+                ต้องเป็นตัวเลข 11 หลัก
+              </p>
             </div>
 
             <div className="space-y-2">
