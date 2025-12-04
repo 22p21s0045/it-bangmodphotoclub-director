@@ -1,3 +1,4 @@
+import { useRouteLoaderData, Link, useSubmit } from "@remix-run/react";
 import {
   Avatar,
   AvatarFallback,
@@ -14,24 +15,51 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import type { User } from "../../../shared/types";
 
 export function UserNav() {
+  const submit = useSubmit();
+  const data = useRouteLoaderData("root") as { user: User | null };
+  const user = data?.user;
+
+  if (!user) {
+    return (
+      <Button variant="ghost" asChild>
+        <Link to="/auth/login">Login</Link>
+      </Button>
+    );
+  }
+
+  const roleName = user.role === "ADMIN" ? "ผู้ดูแลระบบ" : "สมาชิก";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="/avatars/01.png" alt="@shadcn" />
-            <AvatarFallback>SC</AvatarFallback>
-          </Avatar>
-        </Button>
+        <button className="flex items-center gap-2 px-2 h-10 rounded-full hover:bg-accent transition-colors outline-none focus:outline-none">
+          <span className="hidden sm:flex flex-col items-end text-right">
+             <span className="text-sm font-medium leading-none">{user.name || "User"}</span>
+             <span className="text-xs text-muted-foreground">{roleName}</span>
+          </span>
+          <span className="flex h-8 w-8 shrink-0 overflow-hidden rounded-full">
+            {user.avatar ? (
+              <img src={user.avatar} alt={user.name || "User"} className="aspect-square h-full w-full" />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center rounded-full bg-muted">
+                {user.name?.charAt(0).toUpperCase() || "U"}
+              </span>
+            )}
+          </span>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">shadcn</p>
+            <p className="text-sm font-medium leading-none">{user.name || "User"}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              m@example.com
+              {user.email}
+            </p>
+            <p className="text-xs leading-none text-muted-foreground font-semibold text-primary">
+              {roleName}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -52,9 +80,11 @@ export function UserNav() {
           <DropdownMenuItem>New Team</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          Log out
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+        <DropdownMenuItem 
+          className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+          onSelect={() => submit(null, { action: "/auth/logout", method: "post" })}
+        >
+          ออกจากระบบ
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

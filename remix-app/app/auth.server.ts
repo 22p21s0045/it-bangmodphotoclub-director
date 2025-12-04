@@ -4,7 +4,10 @@ import { FormStrategy } from "remix-auth-form";
 import { sessionStorage } from "./session.server";
 
 // @ts-expect-error - remix-auth v4 types seem to be mismatching with implementation
-export let authenticator = new Authenticator(sessionStorage, { sessionKey: "user" });
+console.log("Initializing Authenticator...");
+console.log("Session Storage:", sessionStorage);
+export const authenticator = new Authenticator(sessionStorage, { sessionKey: "user" });
+console.log("Authenticator initialized:", authenticator);
 
 authenticator.use(
   new FormStrategy(async ({ form }) => {

@@ -1,6 +1,5 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, useActionData } from "@remix-run/react";
-import { authenticator } from "~/auth.server";
 import { sessionStorage } from "~/session.server";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -17,23 +16,42 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
   try {
-    console.log("Attempting authentication...");
-    const result = await (authenticator as any).authenticate("user-pass", request, {
-      successRedirect: "/",
-      // failureRedirect: "/auth/login", // Handle failure manually
-      throwOnError: true, // We want to catch the error here
+    const formData = await request.formData();
+    const email = formData.get("email");
+    const password = formData.get("password");
+
+    console.log("Login attempt for:", email);
+
+    // Call backend API
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
+    const response = await fetch(`${backendUrl}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
     });
-    console.log("Authentication successful, result:", result);
-    return redirect("/");
-  } catch (error) {
-    console.log("Authentication error caught:", error);
-    if (error instanceof Response) {
-        console.log("Error is a Response (Redirect), returning it.");
-        return error; 
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error("Login API error:", response.status, text);
+      return { error: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" };
     }
-    
+
+    const user = await response.json();
+    console.log("Login successful, user:", user);
+
+    // Manually set session
+    const session = await sessionStorage.getSession(request.headers.get("Cookie"));
+    session.set("user", user);
+    console.log("Session set with user:", user);
+
+    // Commit session and redirect
+    return redirect("/", {
+      headers: {
+        "Set-Cookie": await sessionStorage.commitSession(session),
+      },
+    });
+  } catch (error) {
     console.error("Login error:", error);
-    // For other errors (like invalid credentials), return the error message
     return { error: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" };
   }
 }
