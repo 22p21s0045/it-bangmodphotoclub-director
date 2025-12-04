@@ -6,19 +6,25 @@ import { th } from "date-fns/locale";
 import { Calendar as CalendarIcon, MapPin, ArrowLeft } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
+import { AssignUserDialog } from "~/components/assign-user-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { sessionStorage } from "~/session.server";
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
   const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
+  const session = await sessionStorage.getSession(request.headers.get("Cookie"));
+  const user = session.get("user");
+
   try {
     const res = await axios.get(`${backendUrl}/events/${params.id}`);
-    return json({ event: res.data });
+    return json({ event: res.data, user });
   } catch (error) {
     throw new Response("ไม่พบกิจกรรม", { status: 404 });
   }
 }
 
 export default function EventDetail() {
-  const { event } = useLoaderData<typeof loader>();
+  const { event, user } = useLoaderData<typeof loader>();
 
   return (
     <div className="container mx-auto p-6">
@@ -97,6 +103,41 @@ export default function EventDetail() {
           <div className="prose max-w-none text-foreground mb-12">
             <h3 className="text-xl font-semibold mb-2">เกี่ยวกับกิจกรรมนี้</h3>
             <p className="text-muted-foreground">{event.description || "ไม่มีรายละเอียด"}</p>
+          </div>
+
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold">ผู้เข้าร่วม ({event.joins?.length || 0})</h3>
+                {user?.role === "ADMIN" && (
+                    <AssignUserDialog 
+                        eventId={event.id} 
+                        joinedUserIds={event.joins?.map((j: any) => j.userId) || []}
+                        onAssign={() => {
+                            // Reload the page to refresh data
+                            window.location.reload();
+                        }}
+                    />
+                )}
+            </div>
+            
+            {event.joins && event.joins.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {event.joins.map((join: any) => (
+                        <div key={join.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
+                            <Avatar className="h-10 w-10">
+                                <AvatarImage src={join.user.avatar} />
+                                <AvatarFallback>{join.user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col overflow-hidden">
+                                <span className="font-medium truncate">{join.user.name || "User"}</span>
+                                <span className="text-xs text-muted-foreground truncate">{join.user.email}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="text-muted-foreground italic">ยังไม่มีผู้เข้าร่วม</div>
+            )}
           </div>
 
           <div>
