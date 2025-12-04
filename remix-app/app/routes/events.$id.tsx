@@ -131,7 +131,7 @@ export default function EventDetail() {
                         eventId={event.id} 
                         joinedUserIds={event.joins?.map((j: any) => j.userId) || []}
                         onAssign={() => {
-                            window.location.reload();
+                            // Remix will automatically revalidate the loader
                         }}
                     />
                 )}
