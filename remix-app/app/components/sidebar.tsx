@@ -36,7 +36,11 @@ export function Sidebar() {
       )}
     >
       <div className="flex items-center justify-between p-4">
-        {!isCollapsed && <h1 className="text-xl font-bold truncate">IT Bangmod Director</h1>}
+        {!isCollapsed && (
+          <div className="flex items-center gap-2 px-2">
+            <img src="/logo.svg" alt="Logo" className="h-28 w-auto" />
+          </div>
+        )}
         <Button
           variant="ghost"
           size="icon"
