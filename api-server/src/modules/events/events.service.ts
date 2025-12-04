@@ -39,7 +39,17 @@ export class EventsService {
       where,
       include: {
         photos: true,
-        joins: true,
+        joins: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true,
+              }
+            }
+          }
+        },
       },
       orderBy: {
         createdAt: 'desc',

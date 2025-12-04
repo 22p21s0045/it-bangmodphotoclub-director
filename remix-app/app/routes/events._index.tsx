@@ -8,15 +8,15 @@ import { th } from "date-fns/locale";
 import { Search } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
 import { DatePicker } from "~/components/date-picker";
 import { CreateEventDialog } from "~/components/create-event-dialog";
 import { EditEventDialog } from "~/components/edit-event-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -129,6 +129,7 @@ export default function Events() {
                 <TableHead>วันที่จัดงาน</TableHead>
                 <TableHead>สถานที่</TableHead>
                 <TableHead>จำนวนรับ</TableHead>
+                <TableHead>ผู้รับผิดชอบ</TableHead>
                 <TableHead className="text-right">จัดการ</TableHead>
               </TableRow>
             </TableHeader>
@@ -164,6 +165,24 @@ export default function Events() {
                   <TableCell>{event.location || "-"}</TableCell>
                   <TableCell>
                     {event.joinLimit > 0 ? `${event.joinLimit} คน` : "ไม่จำกัด"}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex -space-x-3 overflow-hidden p-1">
+                      {event.joins && event.joins.length > 0 ? (
+                        event.joins.map((join: any) => (
+                          <Avatar 
+                            key={join.id} 
+                            className="inline-block h-8 w-8 rounded-full ring-2 ring-white cursor-help"
+                            title={join.user?.name || "User"}
+                          >
+                            <AvatarImage src={join.user?.avatar} />
+                            <AvatarFallback>{join.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                          </Avatar>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground text-xs">-</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
