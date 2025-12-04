@@ -85,13 +85,22 @@ export default function Profile() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
+  const [name, setName] = useState(user.name);
   const [avatarPreview, setAvatarPreview] = useState(user.avatar);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   
   // Cropper state
   const [cropperOpen, setCropperOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isChanged = 
+    name !== user.name || 
+    avatarPreview !== user.avatar || 
+    password !== "" || 
+    confirmPassword !== "";
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -141,7 +150,8 @@ export default function Profile() {
 
   useEffect(() => {
     setAvatarPreview(user.avatar);
-  }, [user.avatar]);
+    setName(user.name);
+  }, [user.avatar, user.name]);
 
   return (
     <div className="container mx-auto p-6 max-w-2xl">
@@ -206,7 +216,8 @@ export default function Profile() {
               <Input 
                 id="name" 
                 name="name" 
-                defaultValue={user.name} 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required 
               />
             </div>
@@ -236,6 +247,8 @@ export default function Profile() {
                 id="password" 
                 name="password" 
                 type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -244,11 +257,13 @@ export default function Profile() {
                 id="confirmPassword" 
                 name="confirmPassword" 
                 type="password" 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isSubmitting} className="w-full">
+            <Button type="submit" disabled={isSubmitting || !isChanged} className="w-full">
               {isSubmitting ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
             </Button>
           </CardFooter>
