@@ -8,6 +8,7 @@ import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
 import { LeaveEventDialog } from "~/components/leave-event-dialog";
+import { RemoveUserDialog } from "~/components/remove-user-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { sessionStorage } from "~/session.server";
 
@@ -42,15 +43,6 @@ export default function EventDetail() {
   const fetcher = useFetcher();
 
   const isUserJoined = user && event.joins?.some((j: any) => j.userId === user.id);
-
-  const handleRemoveUser = (userId: string, userName: string) => {
-    if (confirm(`คุณแน่ใจหรือไม่ที่จะถอน ${userName} ออกจากกิจกรรมนี้?`)) {
-      fetcher.submit(
-        { intent: "leave", userId },
-        { method: "post" }
-      );
-    }
-  };
 
   return (
     <div className="container mx-auto p-6">
@@ -160,15 +152,11 @@ export default function EventDetail() {
                               </div>
                             </div>
                             {user?.role === "ADMIN" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveUser(join.userId, join.user.name || "User")}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-                                disabled={fetcher.state !== "idle"}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
+                              <RemoveUserDialog 
+                                eventId={event.id}
+                                userId={join.userId}
+                                userName={join.user.name || "User"}
+                              />
                             )}
                         </div>
                     ))}
