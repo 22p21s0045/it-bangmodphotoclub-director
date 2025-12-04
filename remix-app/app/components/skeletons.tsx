@@ -18,7 +18,7 @@ export function EventListSkeleton() {
         </TableHeader>
         <TableBody>
           {Array.from({ length: 5 }).map((_, i) => (
-            <TableRow key={i}>
+            <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-100"}>
               <TableCell>
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-[200px]" />

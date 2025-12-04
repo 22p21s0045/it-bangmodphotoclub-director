@@ -143,8 +143,11 @@ export default function Events() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {resolvedEvents.map((event: any) => (
-                      <TableRow key={event.id}>
+                    {resolvedEvents.map((event: any, index: number) => (
+                      <TableRow 
+                        key={event.id}
+                        className={index % 2 === 0 ? "bg-white" : "bg-gray-100 hover:bg-gray-200"}
+                      >
                         <TableCell className="font-medium">
                           <div className="flex flex-col">
                             <span>{event.title}</span>
