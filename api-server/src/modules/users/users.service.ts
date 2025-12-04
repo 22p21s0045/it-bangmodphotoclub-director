@@ -11,7 +11,16 @@ export class UsersService {
     });
   }
 
-  async update(id: string, data: { role?: 'USER' | 'ADMIN' }) {
+  async create(data: any) {
+    return this.prisma.user.create({
+      data: {
+        ...data,
+        password: data.password || "", // Should hash password in real app
+      },
+    });
+  }
+
+  async update(id: string, data: { role?: 'USER' | 'ADMIN'; isActive?: boolean }) {
     return this.prisma.user.update({
       where: { id },
       data,

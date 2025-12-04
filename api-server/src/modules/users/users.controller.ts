@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -10,8 +10,13 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Post()
+  create(@Body() body: any) {
+    return this.usersService.create(body);
+  }
+
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: { role?: 'USER' | 'ADMIN' }) {
+  update(@Param('id') id: string, @Body() body: { role?: 'USER' | 'ADMIN'; isActive?: boolean }) {
     return this.usersService.update(id, body);
   }
 

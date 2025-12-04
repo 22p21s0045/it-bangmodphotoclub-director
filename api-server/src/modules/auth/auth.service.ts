@@ -16,7 +16,6 @@ export class AuthService {
           throw new UnauthorizedException('User not found');
         }
 
-        // If user has no password set (legacy/oauth users), deny password login
         if (!user.password) {
             console.log('User has no password');
             throw new UnauthorizedException('Password not set for this user');
@@ -27,6 +26,10 @@ export class AuthService {
         console.log(`Password match: ${isMatch}`);
         
         if (isMatch) {
+          if (!user.isActive) {
+            throw new UnauthorizedException('Account suspended');
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { password, ...result } = user;
           return result;
         }
