@@ -1,5 +1,5 @@
-import { Link, useLocation } from "@remix-run/react";
-import { Calendar, ChevronLeft, ChevronRight, Home, List } from "lucide-react";
+import { Link, useLocation, useRouteLoaderData } from "@remix-run/react";
+import { Calendar, ChevronLeft, ChevronRight, Home, List, Users } from "lucide-react";
 import { useState } from "react";
 import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
@@ -25,6 +25,8 @@ const sidebarItems = [
 export function Sidebar() {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const data = useRouteLoaderData("root") as { user: any };
+  const user = data?.user;
 
   return (
     <div
@@ -65,6 +67,20 @@ export function Sidebar() {
             </Link>
           );
         })}
+        {user?.role === "ADMIN" && (
+          <Link
+            to="/admin/users"
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+              location.pathname.startsWith("/admin/users") ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+              isCollapsed ? "justify-center px-2" : ""
+            )}
+            title={isCollapsed ? "จัดการผู้ใช้งาน" : undefined}
+          >
+            <Users className="h-4 w-4" />
+            {!isCollapsed && <span>จัดการผู้ใช้งาน</span>}
+          </Link>
+        )}
       </nav>
     </div>
   );
