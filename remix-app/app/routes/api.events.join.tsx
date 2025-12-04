@@ -37,8 +37,9 @@ export async function action({ request }: ActionFunctionArgs) {
       userId: userIdToJoin,
     });
     return json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to join event", error);
-    return json({ error: "Failed to join event" }, { status: 500 });
+    const errorMessage = error.response?.data?.message || "Failed to join event";
+    return json({ error: errorMessage }, { status: error.response?.status || 500 });
   }
 }

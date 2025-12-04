@@ -69,11 +69,14 @@ export function AssignUserDialog({ eventId, joinedUserIds, onAssign }: AssignUse
     );
   };
 
-  // Close dialog on successful assignment
+  // Handle response
   useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data) {
-        // We don't auto-close to allow multiple assignments, but we trigger refresh
-        onAssign();
+        if (fetcher.data.error) {
+            alert(fetcher.data.error); // Simple alert for now, can be improved with toast
+        } else {
+            onAssign();
+        }
     }
   }, [fetcher.state, fetcher.data, onAssign]);
 

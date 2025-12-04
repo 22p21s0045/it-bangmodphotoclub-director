@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -125,7 +125,7 @@ export class EventsService {
 
     // Check join limit
     if (event.joinLimit > 0 && event.joins.length >= event.joinLimit) {
-      throw new Error('Event is full');
+      throw new BadRequestException('กิจกรรมนี้มีผู้เข้าร่วมครบจำนวนแล้ว');
     }
 
     return this.prisma.joinEvent.create({
