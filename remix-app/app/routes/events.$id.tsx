@@ -7,6 +7,7 @@ import { Calendar as CalendarIcon, MapPin, ArrowLeft, UserMinus, X } from "lucid
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
+import { LeaveEventDialog } from "~/components/leave-event-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { sessionStorage } from "~/session.server";
 
@@ -41,15 +42,6 @@ export default function EventDetail() {
   const fetcher = useFetcher();
 
   const isUserJoined = user && event.joins?.some((j: any) => j.userId === user.id);
-
-  const handleLeave = () => {
-    if (user && confirm("คุณแน่ใจหรือไม่ที่จะถอนตัวออกจากกิจกรรมนี้?")) {
-      fetcher.submit(
-        { intent: "leave", userId: user.id },
-        { method: "post" }
-      );
-    }
-  };
 
   const handleRemoveUser = (userId: string, userName: string) => {
     if (confirm(`คุณแน่ใจหรือไม่ที่จะถอน ${userName} ออกจากกิจกรรมนี้?`)) {
@@ -124,15 +116,11 @@ export default function EventDetail() {
             </div>
             <div className="flex gap-2">
               {isUserJoined && (
-                <Button 
-                  variant="outline" 
-                  onClick={handleLeave}
-                  disabled={fetcher.state !== "idle"}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <UserMinus className="w-4 h-4 mr-2" />
-                  ถอนตัว
-                </Button>
+                <LeaveEventDialog 
+                  eventId={event.id} 
+                  userId={user.id} 
+                  isUserJoined={isUserJoined} 
+                />
               )}
               <EditEventDialog event={event} />
             </div>
@@ -145,7 +133,7 @@ export default function EventDetail() {
 
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold">ผู้เข้าร่วม ({event.joins?.length || 0})</h3>
+                <h3 className="text-2xl font-bold">ผู้รับผิดชอบ {event.joins?.length || 0} คน</h3>
                 {user?.role === "ADMIN" && (
                     <AssignUserDialog 
                         eventId={event.id} 

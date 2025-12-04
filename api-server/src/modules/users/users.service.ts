@@ -22,10 +22,16 @@ export class UsersService {
     });
   }
 
-  async update(id: string, data: { role?: 'USER' | 'ADMIN'; isActive?: boolean }) {
+  async update(id: string, data: { name?: string; avatar?: string; password?: string; role?: 'USER' | 'ADMIN'; isActive?: boolean }) {
+    const updateData: any = { ...data };
+    
+    if (data.password) {
+      updateData.password = await bcrypt.hash(data.password, 10);
+    }
+
     return this.prisma.user.update({
       where: { id },
-      data,
+      data: updateData,
     });
   }
 

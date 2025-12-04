@@ -128,7 +128,7 @@ export default function Events() {
                 <TableHead>ชื่องาน</TableHead>
                 <TableHead>วันที่จัดงาน</TableHead>
                 <TableHead>สถานที่</TableHead>
-                <TableHead>จำนวนรับ</TableHead>
+                <TableHead>จำนวนที่ต้องการ</TableHead>
                 <TableHead>ผู้รับผิดชอบ</TableHead>
                 <TableHead className="text-right">จัดการ</TableHead>
               </TableRow>
