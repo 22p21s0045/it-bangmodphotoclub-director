@@ -1,5 +1,6 @@
 import { useLocation } from "@remix-run/react";
 import { Sidebar } from "./sidebar";
+import { Navbar } from "./navbar";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,9 +17,12 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto p-8">
-        {children}
-      </main>
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <Navbar />
+        <main className="flex-1 overflow-y-auto p-8">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

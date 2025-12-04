@@ -1,20 +1,45 @@
-import { ActionFunctionArgs, redirect } from "@remix-run/node";
+import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, useActionData } from "@remix-run/react";
 import { authenticator } from "~/auth.server";
+import { sessionStorage } from "~/session.server";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "~/components/ui/card";
 import { useState, useEffect } from "react";
 
+export async function loader({ request }: LoaderFunctionArgs) {
+  const session = await sessionStorage.getSession(request.headers.get("Cookie"));
+  const user = session.get("user");
+  if (user) throw redirect("/");
+  return null;
+}
+
 export async function action({ request }: ActionFunctionArgs) {
-  return authenticator.authenticate("user-pass", request, {
-    successRedirect: "/",
-    failureRedirect: "/auth/login",
-  });
+  try {
+    console.log("Attempting authentication...");
+    const result = await (authenticator as any).authenticate("user-pass", request, {
+      successRedirect: "/",
+      // failureRedirect: "/auth/login", // Handle failure manually
+      throwOnError: true, // We want to catch the error here
+    });
+    console.log("Authentication successful, result:", result);
+    return redirect("/");
+  } catch (error) {
+    console.log("Authentication error caught:", error);
+    if (error instanceof Response) {
+        console.log("Error is a Response (Redirect), returning it.");
+        return error; 
+    }
+    
+    console.error("Login error:", error);
+    // For other errors (like invalid credentials), return the error message
+    return { error: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" };
+  }
 }
 
 export default function Login() {
+  const actionData = useActionData<typeof action>() as { error?: string } | undefined;
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = [
     "/images/login-bg-2.jpg",
@@ -73,6 +98,12 @@ export default function Login() {
               กรุณากรอกข้อมูลเพื่อเข้าสู่ระบบ
             </p>
           </div>
+
+          {actionData?.error && (
+            <div className="rounded-md bg-red-50 p-4 text-sm text-red-500 border border-red-200">
+              {actionData.error}
+            </div>
+          )}
 
           <Form method="post" className="space-y-4">
             <div className="space-y-2">

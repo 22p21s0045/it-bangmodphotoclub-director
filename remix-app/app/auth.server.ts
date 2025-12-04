@@ -3,7 +3,8 @@ import { FormStrategy } from "remix-auth-form";
 // import { MicrosoftStrategy } from "remix-auth-microsoft";
 import { sessionStorage } from "./session.server";
 
-export let authenticator = new (Authenticator as any)(sessionStorage, { sessionKey: "user" });
+// @ts-expect-error - remix-auth v4 types seem to be mismatching with implementation
+export let authenticator = new Authenticator(sessionStorage, { sessionKey: "user" });
 
 authenticator.use(
   new FormStrategy(async ({ form }) => {

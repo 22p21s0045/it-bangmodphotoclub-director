@@ -9,7 +9,6 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
-import { ThemeToggle } from "~/components/theme-toggle";
 import { DatePicker } from "~/components/date-picker";
 import { CreateEventDialog } from "~/components/create-event-dialog";
 import { EditEventDialog } from "~/components/edit-event-dialog";
@@ -73,7 +72,6 @@ export default function Events() {
         <h1 className="text-3xl font-bold tracking-tight">กิจกรรม</h1>
         <div className="flex items-center gap-2">
             <CreateEventDialog />
-            <ThemeToggle />
             <Button variant="outline" asChild>
                 <Link to="/calendar" className="flex items-center gap-2">
                     <CalendarIcon className="w-4 h-4" /> ปฏิทิน
