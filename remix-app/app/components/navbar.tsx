@@ -3,7 +3,7 @@ import { UserNav } from "~/components/user-nav";
 
 export function Navbar() {
   return (
-    <div className="border-b">
+    <div>
       <div className="flex h-16 items-center px-4">
         {/* Left side - can be breadcrumbs or mobile toggle later */}
         <div className="ml-auto flex items-center space-x-4">
