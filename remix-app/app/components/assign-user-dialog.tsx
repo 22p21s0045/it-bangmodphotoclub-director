@@ -15,6 +15,7 @@ import {
 import { Input } from "~/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { ScrollArea } from "./ui/scroll-area";
+import { Skeleton } from "./ui/skeleton";
 import { apiClient } from "~/lib/api-client";
 
 interface User {
@@ -109,7 +110,20 @@ export function AssignUserDialog({ eventId, joinedUserIds, onAssign }: AssignUse
           </div>
           <ScrollArea className="h-[300px] pr-4">
             {loading ? (
-              <div className="flex justify-center p-4">กำลังโหลด...</div>
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-[150px]" />
+                        <Skeleton className="h-3 w-[100px]" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-8 w-16" />
+                  </div>
+                ))}
+              </div>
             ) : filteredUsers.length === 0 ? (
               <div className="text-center text-muted-foreground p-4">ไม่พบสมาชิก</div>
             ) : (

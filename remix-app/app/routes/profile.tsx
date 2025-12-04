@@ -1,7 +1,8 @@
-import { json, LoaderFunctionArgs, ActionFunctionArgs, redirect } from "@remix-run/node";
-import { useLoaderData, useActionData, Form, useNavigation } from "@remix-run/react";
+import { json, defer, LoaderFunctionArgs, ActionFunctionArgs, redirect } from "@remix-run/node";
+import { useLoaderData, useActionData, Form, useNavigation, Await } from "@remix-run/react";
 import axios from "axios";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { ProfileSkeleton } from "~/components/skeletons";
 import { sessionStorage } from "~/session.server";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -20,7 +21,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return redirect("/auth/login");
   }
 
-  return json({ user });
+  // Simulate a delay to show skeleton (optional, for testing)
+  // await new Promise(resolve => setTimeout(resolve, 1000));
+
+  return defer({ user: Promise.resolve(user) });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -92,6 +96,38 @@ export default function Profile() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
+  return (
+    <div className="container mx-auto p-6 max-w-2xl">
+      <h1 className="text-3xl font-bold mb-8">จัดการโปรไฟล์</h1>
+
+      {actionData?.error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>ผิดพลาด</AlertTitle>
+          <AlertDescription>{actionData.error}</AlertDescription>
+        </Alert>
+      )}
+
+      {actionData?.success && (
+        <Alert className="mb-6 border-green-500 text-green-700 bg-green-50">
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertTitle>สำเร็จ</AlertTitle>
+          <AlertDescription>{actionData.message}</AlertDescription>
+        </Alert>
+      )}
+
+      <Suspense fallback={<ProfileSkeleton />}>
+        <Await resolve={user}>
+          {(resolvedUser) => (
+            <ProfileForm user={resolvedUser} actionData={actionData} isSubmitting={isSubmitting} />
+          )}
+        </Await>
+      </Suspense>
+    </div>
+  );
+}
+
+function ProfileForm({ user, actionData, isSubmitting }: { user: any, actionData: any, isSubmitting: boolean }) {
   const [name, setName] = useState(user.name);
   const [studentId, setStudentId] = useState(user.studentId || "");
   const [avatarPreview, setAvatarPreview] = useState(user.avatar);
@@ -164,25 +200,7 @@ export default function Profile() {
   }, [user.avatar, user.name, user.studentId]);
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
-      <h1 className="text-3xl font-bold mb-8">จัดการโปรไฟล์</h1>
-
-      {actionData?.error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>ผิดพลาด</AlertTitle>
-          <AlertDescription>{actionData.error}</AlertDescription>
-        </Alert>
-      )}
-
-      {actionData?.success && (
-        <Alert className="mb-6 border-green-500 text-green-700 bg-green-50">
-          <CheckCircle2 className="h-4 w-4" />
-          <AlertTitle>สำเร็จ</AlertTitle>
-          <AlertDescription>{actionData.message}</AlertDescription>
-        </Alert>
-      )}
-
+    <>
       <Form method="post">
         <Card className="mb-8">
           <CardHeader>
@@ -307,6 +325,9 @@ export default function Profile() {
         imageSrc={selectedImage}
         onConfirm={handleCropConfirm}
       />
-    </div>
+    </>
   );
 }
+
+
+

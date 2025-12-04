@@ -1,5 +1,5 @@
-import { json, LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useFetcher, Link, Form } from "@remix-run/react";
+import { json, defer, LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
+import { useLoaderData, useFetcher, Link, Form, Await } from "@remix-run/react";
 import { 
   Table, 
   TableBody, 
@@ -32,7 +32,8 @@ import {
 import { MoreHorizontal, Trash, UserCog, UserPlus, Ban, CheckCircle } from "lucide-react";
 import axios from "axios";
 import { sessionStorage } from "~/session.server";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { UserListSkeleton } from "~/components/skeletons";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await sessionStorage.getSession(request.headers.get("Cookie"));
@@ -45,13 +46,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
   let backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
   backendUrl = backendUrl.replace("localhost", "127.0.0.1");
   console.log("Fetching users from:", backendUrl);
-  try {
-    const res = await axios.get(`${backendUrl}/users`);
-    return json({ users: res.data, currentUser: user });
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    throw error;
-  }
+  
+  const usersPromise = axios.get(`${backendUrl}/users`)
+    .then(res => res.data)
+    .catch(error => {
+      console.error("Error fetching users:", error);
+      return [];
+    });
+
+  return defer({ users: usersPromise, currentUser: user });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -150,7 +153,11 @@ export default function AdminUsers() {
         <h1 className="text-3xl font-bold">จัดการผู้ใช้งาน</h1>
         <div className="flex items-center gap-4">
           <div className="text-sm text-muted-foreground">
-            ทั้งหมด {users.length} คน
+            <Suspense fallback={<span>...</span>}>
+              <Await resolve={users}>
+                {(resolvedUsers) => `ทั้งหมด ${resolvedUsers.length} คน`}
+              </Await>
+            </Suspense>
           </div>
           <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
             <DialogTrigger asChild>
@@ -202,108 +209,114 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Avatar</TableHead>
-              <TableHead>ชื่อ</TableHead>
-              <TableHead>อีเมล</TableHead>
-              <TableHead>สถานะ</TableHead>
-              <TableHead>บทบาท</TableHead>
-              <TableHead className="text-right">จัดการ</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user: any, index: number) => (
-              <TableRow 
-                key={user.id} 
-                className={`
-                  ${!user.isActive ? "bg-muted/50" : ""} 
-                  ${user.isActive && index % 2 === 0 ? "bg-gray-100" : "bg-white"}
-                  hover:bg-gray-200 transition-colors
-                `}
-              >
-                <TableCell>
-                  <Avatar>
-                    <AvatarImage src={user.avatar} />
-                    <AvatarFallback>{user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-                  </Avatar>
-                </TableCell>
-                <TableCell className="font-medium">
-                  {user.name || "ไม่ระบุชื่อ"}
-                  {!user.isActive && <span className="ml-2 text-xs text-red-500">(ระงับการใช้งาน)</span>}
-                </TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  {user.isActive ? (
-                    <span className="inline-flex items-center text-green-600 text-xs font-medium">
-                      <CheckCircle className="w-3 h-3 mr-1" /> ปกติ
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center text-red-600 text-xs font-medium">
-                      <Ban className="w-3 h-3 mr-1" /> ถูกระงับ
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    user.role === "ADMIN" ? "bg-purple-100 text-purple-800" : "bg-green-100 text-green-800"
-                  }`}>
-                    {user.role === "ADMIN" ? "ผู้ดูแลระบบ" : "สมาชิก"}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  {user.id !== currentUser.id && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-accent cursor-pointer">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>การจัดการ</DropdownMenuLabel>
-                        <DropdownMenuItem 
-                          onClick={() => handleRoleChange(user)} 
-                          className="cursor-pointer hover:!bg-gray-200 transition-colors"
-                        >
-                          <UserCog className="mr-2 h-4 w-4" />
-                          เปลี่ยนบทบาท
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleToggleStatus(user)} 
-                          className="cursor-pointer hover:!bg-gray-200 transition-colors"
-                        >
-                          {user.isActive ? (
-                            <>
-                              <Ban className="mr-2 h-4 w-4 text-orange-500" />
-                              ระงับการใช้งาน
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                              คืนสิทธิ์การใช้งาน
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="text-red-600 focus:text-red-600 cursor-pointer hover:!bg-gray-200 transition-colors"
-                          onClick={() => handleDelete(user)}
-                        >
-                          <Trash className="mr-2 h-4 w-4" />
-                          ลบผู้ใช้งาน
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <Suspense fallback={<UserListSkeleton />}>
+        <Await resolve={users}>
+          {(resolvedUsers) => (
+            <div className="border rounded-md">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[80px]">Avatar</TableHead>
+                    <TableHead>ชื่อ</TableHead>
+                    <TableHead>อีเมล</TableHead>
+                    <TableHead>สถานะ</TableHead>
+                    <TableHead>บทบาท</TableHead>
+                    <TableHead className="text-right">จัดการ</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {resolvedUsers.map((user: any, index: number) => (
+                    <TableRow 
+                      key={user.id} 
+                      className={`
+                        ${!user.isActive ? "bg-muted/50" : ""} 
+                        ${user.isActive && index % 2 === 0 ? "bg-gray-100" : "bg-white"}
+                        hover:bg-gray-200 transition-colors
+                      `}
+                    >
+                      <TableCell>
+                        <Avatar>
+                          <AvatarImage src={user.avatar} />
+                          <AvatarFallback>{user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                        </Avatar>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {user.name || "ไม่ระบุชื่อ"}
+                        {!user.isActive && <span className="ml-2 text-xs text-red-500">(ระงับการใช้งาน)</span>}
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        {user.isActive ? (
+                          <span className="inline-flex items-center text-green-600 text-xs font-medium">
+                            <CheckCircle className="w-3 h-3 mr-1" /> ปกติ
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center text-red-600 text-xs font-medium">
+                            <Ban className="w-3 h-3 mr-1" /> ถูกระงับ
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          user.role === "ADMIN" ? "bg-purple-100 text-purple-800" : "bg-green-100 text-green-800"
+                        }`}>
+                          {user.role === "ADMIN" ? "ผู้ดูแลระบบ" : "สมาชิก"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {user.id !== currentUser.id && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-accent cursor-pointer">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>การจัดการ</DropdownMenuLabel>
+                              <DropdownMenuItem 
+                                onClick={() => handleRoleChange(user)} 
+                                className="cursor-pointer hover:!bg-gray-200 transition-colors"
+                              >
+                                <UserCog className="mr-2 h-4 w-4" />
+                                เปลี่ยนบทบาท
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleToggleStatus(user)} 
+                                className="cursor-pointer hover:!bg-gray-200 transition-colors"
+                              >
+                                {user.isActive ? (
+                                  <>
+                                    <Ban className="mr-2 h-4 w-4 text-orange-500" />
+                                    ระงับการใช้งาน
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                                    คืนสิทธิ์การใช้งาน
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                className="text-red-600 focus:text-red-600 cursor-pointer hover:!bg-gray-200 transition-colors"
+                                onClick={() => handleDelete(user)}
+                              >
+                                <Trash className="mr-2 h-4 w-4" />
+                                ลบผู้ใช้งาน
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </Await>
+      </Suspense>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

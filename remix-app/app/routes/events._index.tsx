@@ -1,7 +1,8 @@
-import { json, LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useSubmit, Link, useFetcher } from "@remix-run/react";
+import { json, defer, LoaderFunctionArgs } from "@remix-run/node";
+import { useLoaderData, useSubmit, Link, useFetcher, Await } from "@remix-run/react";
 import { sessionStorage } from "~/session.server";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { EventListSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
@@ -34,15 +35,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
   
-  try {
-    const res = await axios.get(`${backendUrl}/events`, {
+  const eventsPromise = axios.get(`${backendUrl}/events`, {
       params: { search, startDate, endDate }
+    }).then(res => res.data).catch(error => {
+      console.error("Failed to fetch events", error);
+      return [];
     });
-    return json({ events: res.data, search, startDate, endDate, user });
-  } catch (error) {
-    console.error("Failed to fetch events", error);
-    return json({ events: [], search, startDate, endDate, user: null });
-  }
+
+  return defer({ 
+    events: eventsPromise, 
+    search, 
+    startDate, 
+    endDate, 
+    user 
+  });
 }
 
 export default function Events() {
@@ -116,100 +122,106 @@ export default function Events() {
         </CardContent>
       </Card>
 
-      {events.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-            ไม่พบกิจกรรม
-        </div>
-      ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ชื่องาน</TableHead>
-                <TableHead>วันที่จัดงาน</TableHead>
-                <TableHead>สถานที่</TableHead>
-                <TableHead>จำนวนที่ต้องการ</TableHead>
-                <TableHead>ผู้รับผิดชอบ</TableHead>
-                <TableHead className="text-right">จัดการ</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {events.map((event: any) => (
-                <TableRow key={event.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex flex-col">
-                      <span>{event.title}</span>
-                      <span className="text-xs text-muted-foreground line-clamp-1">{event.description}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      {event.eventDates && event.eventDates.length > 0 ? (
-                        <>
-                          <span>
-                            {event.eventDates.length === 1
-                              ? format(new Date(event.eventDates[0]), "d MMM yyyy", { locale: th })
-                              : `${event.eventDates.length} วัน`}
-                          </span>
-                          {event.eventDates.length > 1 && (
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(event.eventDates[0]), "d MMM", { locale: th })} - {format(new Date(event.eventDates[event.eventDates.length - 1]), "d MMM yyyy", { locale: th })}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{event.location || "-"}</TableCell>
-                  <TableCell>
-                    {event.joinLimit > 0 ? `${event.joinLimit} คน` : "ไม่จำกัด"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex -space-x-3 overflow-hidden p-1">
-                      {event.joins && event.joins.length > 0 ? (
-                        event.joins.map((join: any) => (
-                          <Avatar 
-                            key={join.id} 
-                            className="inline-block h-8 w-8 rounded-full ring-2 ring-white cursor-help"
-                            title={join.user?.name || "User"}
-                          >
-                            <AvatarImage src={join.user?.avatar} />
-                            <AvatarFallback>{join.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-                          </Avatar>
-                        ))
-                      ) : (
-                        <span className="text-muted-foreground text-xs">-</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      {user && (
-                        <fetcher.Form method="post" action="/api/events/join">
-                          <input type="hidden" name="eventId" value={event.id} />
-                          <Button 
-                            variant={event.joins?.some((j: any) => j.userId === user.id) ? "secondary" : "default"}
-                            size="sm"
-                            disabled={event.joins?.some((j: any) => j.userId === user.id) || fetcher.state === "submitting"}
-                          >
-                            {event.joins?.some((j: any) => j.userId === user.id) ? "เข้าร่วมแล้ว" : "เข้าร่วม"}
-                          </Button>
-                        </fetcher.Form>
-                      )}
-                      <EditEventDialog event={event} />
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/events/${event.id}`}>ดูรายละเอียด</Link>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <Suspense fallback={<EventListSkeleton />}>
+        <Await resolve={events}>
+          {(resolvedEvents) => (
+            resolvedEvents.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                  ไม่พบกิจกรรม
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ชื่องาน</TableHead>
+                      <TableHead>วันที่จัดงาน</TableHead>
+                      <TableHead>สถานที่</TableHead>
+                      <TableHead>จำนวนที่ต้องการ</TableHead>
+                      <TableHead>ผู้รับผิดชอบ</TableHead>
+                      <TableHead className="text-right">จัดการ</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {resolvedEvents.map((event: any) => (
+                      <TableRow key={event.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex flex-col">
+                            <span>{event.title}</span>
+                            <span className="text-xs text-muted-foreground line-clamp-1">{event.description}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            {event.eventDates && event.eventDates.length > 0 ? (
+                              <>
+                                <span>
+                                  {event.eventDates.length === 1
+                                    ? format(new Date(event.eventDates[0]), "d MMM yyyy", { locale: th })
+                                    : `${event.eventDates.length} วัน`}
+                                </span>
+                                {event.eventDates.length > 1 && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(new Date(event.eventDates[0]), "d MMM", { locale: th })} - {format(new Date(event.eventDates[event.eventDates.length - 1]), "d MMM yyyy", { locale: th })}
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{event.location || "-"}</TableCell>
+                        <TableCell>
+                          {event.joinLimit > 0 ? `${event.joinLimit} คน` : "ไม่จำกัด"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex -space-x-3 overflow-hidden p-1">
+                            {event.joins && event.joins.length > 0 ? (
+                              event.joins.map((join: any) => (
+                                <Avatar 
+                                  key={join.id} 
+                                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white cursor-help"
+                                  title={join.user?.name || "User"}
+                                >
+                                  <AvatarImage src={join.user?.avatar} />
+                                  <AvatarFallback>{join.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                                </Avatar>
+                              ))
+                            ) : (
+                              <span className="text-muted-foreground text-xs">-</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {user && (
+                              <fetcher.Form method="post" action="/api/events/join">
+                                <input type="hidden" name="eventId" value={event.id} />
+                                <Button 
+                                  variant={event.joins?.some((j: any) => j.userId === user.id) ? "secondary" : "default"}
+                                  size="sm"
+                                  disabled={event.joins?.some((j: any) => j.userId === user.id) || fetcher.state === "submitting"}
+                                >
+                                  {event.joins?.some((j: any) => j.userId === user.id) ? "เข้าร่วมแล้ว" : "เข้าร่วม"}
+                                </Button>
+                              </fetcher.Form>
+                            )}
+                            <EditEventDialog event={event} />
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={`/events/${event.id}`}>ดูรายละเอียด</Link>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )
+          )}
+        </Await>
+      </Suspense>
     </div>
   );
 }
