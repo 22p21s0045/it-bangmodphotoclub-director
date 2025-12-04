@@ -126,6 +126,30 @@ export class EventsService {
     });
   }
 
+  async leave(eventId: string, userId: string) {
+    const joinRecord = await this.prisma.joinEvent.findUnique({
+      where: {
+        userId_eventId: {
+          userId,
+          eventId,
+        },
+      },
+    });
+
+    if (!joinRecord) {
+      throw new NotFoundException('User is not joined to this event');
+    }
+
+    return this.prisma.joinEvent.delete({
+      where: {
+        userId_eventId: {
+          userId,
+          eventId,
+        },
+      },
+    });
+  }
+
   async getLocations() {
     const events = await this.prisma.event.findMany({
       where: {

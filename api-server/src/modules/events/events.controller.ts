@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -35,5 +35,10 @@ export class EventsController {
   @Post(':id/join')
   join(@Param('id') id: string, @Body('userId') userId: string) {
     return this.eventsService.join(id, userId);
+  }
+
+  @Delete(':id/join/:userId')
+  leave(@Param('id') id: string, @Param('userId') userId: string) {
+    return this.eventsService.leave(id, userId);
   }
 }

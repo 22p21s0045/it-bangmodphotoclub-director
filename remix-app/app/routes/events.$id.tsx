@@ -1,9 +1,9 @@
-import { json, LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, Link } from "@remix-run/react";
+import { json, LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
+import { useLoaderData, Link, useFetcher } from "@remix-run/react";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, UserMinus, X } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
@@ -23,8 +23,42 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   }
 }
 
+export async function action({ request, params }: ActionFunctionArgs) {
+  const formData = await request.formData();
+  const intent = formData.get("intent");
+  const userId = formData.get("userId");
+  const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
+
+  if (intent === "leave") {
+    await axios.delete(`${backendUrl}/events/${params.id}/join/${userId}`);
+  }
+
+  return json({ success: true });
+}
+
 export default function EventDetail() {
   const { event, user } = useLoaderData<typeof loader>();
+  const fetcher = useFetcher();
+
+  const isUserJoined = user && event.joins?.some((j: any) => j.userId === user.id);
+
+  const handleLeave = () => {
+    if (user && confirm("คุณแน่ใจหรือไม่ที่จะถอนตัวออกจากกิจกรรมนี้?")) {
+      fetcher.submit(
+        { intent: "leave", userId: user.id },
+        { method: "post" }
+      );
+    }
+  };
+
+  const handleRemoveUser = (userId: string, userName: string) => {
+    if (confirm(`คุณแน่ใจหรือไม่ที่จะถอน ${userName} ออกจากกิจกรรมนี้?`)) {
+      fetcher.submit(
+        { intent: "leave", userId },
+        { method: "post" }
+      );
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -58,11 +92,24 @@ export default function EventDetail() {
                         วันที่จัดกิจกรรม ({event.eventDates.length} วัน):
                       </span>
                       <div className="flex flex-wrap gap-2 ml-5">
-                        {event.eventDates.map((date: string, index: number) => (
-                          <span key={index} className="bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
-                            {format(new Date(date), "d MMM yyyy", { locale: th })}
-                          </span>
-                        ))}
+                        {event.eventDates.map((date: string, index: number) => {
+                          const eventDate = new Date(date);
+                          const today = new Date();
+                          const daysUntil = differenceInDays(eventDate, today);
+                          
+                          return (
+                            <div key={index} className="flex flex-col">
+                              <span className="text-sm">
+                                {format(eventDate, "d MMMM yyyy", { locale: th })}
+                              </span>
+                              {daysUntil >= 0 && (
+                                <span className="text-xs text-muted-foreground">
+                                  ({daysUntil === 0 ? "วันนี้" : `อีก ${daysUntil} วัน`})
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -73,30 +120,21 @@ export default function EventDetail() {
                     </span>
                   )}
                 </div>
-                {event.submissionDeadline && (
-                  <div className="flex items-center gap-1 text-red-500 font-medium">
-                    <CalendarIcon className="w-4 h-4" />
-                    <span>
-                      ส่งรูปได้ถึง: {format(new Date(event.submissionDeadline), "d MMMM yyyy", { locale: th })}
-                      {" "}
-                      {(() => {
-                        const daysLeft = differenceInDays(new Date(event.submissionDeadline), new Date());
-                        if (daysLeft < 0) return "(หมดเขตแล้ว)";
-                        if (daysLeft === 0) return "(วันนี้วันสุดท้าย)";
-                        return `(เหลือเวลาอีก ${daysLeft} วัน)`;
-                      })()}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
             <div className="flex gap-2">
+              {isUserJoined && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleLeave}
+                  disabled={fetcher.state !== "idle"}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <UserMinus className="w-4 h-4 mr-2" />
+                  ถอนตัว
+                </Button>
+              )}
               <EditEventDialog event={event} />
-              <Button asChild>
-                  <Link to={`/events/${event.id}/upload`}>
-                      อัปโหลดรูปภาพ
-                  </Link>
-              </Button>
             </div>
           </div>
 
@@ -113,7 +151,6 @@ export default function EventDetail() {
                         eventId={event.id} 
                         joinedUserIds={event.joins?.map((j: any) => j.userId) || []}
                         onAssign={() => {
-                            // Reload the page to refresh data
                             window.location.reload();
                         }}
                     />
@@ -123,15 +160,28 @@ export default function EventDetail() {
             {event.joins && event.joins.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {event.joins.map((join: any) => (
-                        <div key={join.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
-                            <Avatar className="h-10 w-10">
-                                <AvatarImage src={join.user.avatar} />
-                                <AvatarFallback>{join.user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col overflow-hidden">
-                                <span className="font-medium truncate">{join.user.name || "User"}</span>
-                                <span className="text-xs text-muted-foreground truncate">{join.user.email}</span>
+                        <div key={join.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <Avatar className="h-10 w-10">
+                                  <AvatarImage src={join.user.avatar} />
+                                  <AvatarFallback>{join.user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col overflow-hidden">
+                                  <span className="font-medium truncate">{join.user.name || "User"}</span>
+                                  <span className="text-xs text-muted-foreground truncate">{join.user.email}</span>
+                              </div>
                             </div>
+                            {user?.role === "ADMIN" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveUser(join.userId, join.user.name || "User")}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                                disabled={fetcher.state !== "idle"}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
                         </div>
                     ))}
                 </div>
