@@ -93,7 +93,7 @@ export default function Calendar() {
         <div className="grid grid-cols-7 auto-rows-fr bg-gray-200 gap-px">
             {days.map((day, dayIdx) => {
                 const dayEvents = events.filter((event: any) => 
-                    isSameDay(new Date(event.startDate), day)
+                    event.eventDates && event.eventDates.some((dateStr: string) => isSameDay(new Date(dateStr), day))
                 );
 
                 return (

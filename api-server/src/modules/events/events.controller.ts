@@ -31,4 +31,9 @@ export class EventsController {
   update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
     return this.eventsService.update(id, updateEventDto);
   }
+
+  @Post(':id/join')
+  join(@Param('id') id: string, @Body('userId') userId: string) {
+    return this.eventsService.join(id, userId);
+  }
 }

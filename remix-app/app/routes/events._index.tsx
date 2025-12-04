@@ -1,5 +1,6 @@
 import { json, LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useSubmit, Link } from "@remix-run/react";
+import { useLoaderData, useSubmit, Link, useFetcher } from "@remix-run/react";
+import { sessionStorage } from "~/session.server";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { format } from "date-fns";
@@ -23,6 +24,9 @@ import {
 } from "~/components/ui/table";
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const session = await sessionStorage.getSession(request.headers.get("Cookie"));
+  const user = session.get("user");
+
   const url = new URL(request.url);
   const search = url.searchParams.get("search") || "";
   const startDate = url.searchParams.get("startDate") || "";
@@ -34,16 +38,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const res = await axios.get(`${backendUrl}/events`, {
       params: { search, startDate, endDate }
     });
-    return json({ events: res.data, search, startDate, endDate });
+    return json({ events: res.data, search, startDate, endDate, user });
   } catch (error) {
     console.error("Failed to fetch events", error);
-    return json({ events: [], search, startDate, endDate });
+    return json({ events: [], search, startDate, endDate, user: null });
   }
 }
 
 export default function Events() {
-  const { events, search, startDate, endDate } = useLoaderData<typeof loader>();
+  const { events, search, startDate, endDate, user } = useLoaderData<typeof loader>();
   const submit = useSubmit();
+  const fetcher = useFetcher();
   
   const [searchValue, setSearchValue] = useState(search);
   const [startDateValue, setStartDateValue] = useState<Date | undefined>(
@@ -162,6 +167,18 @@ export default function Events() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      {user && (
+                        <fetcher.Form method="post" action="/api/events/join">
+                          <input type="hidden" name="eventId" value={event.id} />
+                          <Button 
+                            variant={event.joins?.some((j: any) => j.userId === user.id) ? "secondary" : "default"}
+                            size="sm"
+                            disabled={event.joins?.some((j: any) => j.userId === user.id) || fetcher.state === "submitting"}
+                          >
+                            {event.joins?.some((j: any) => j.userId === user.id) ? "เข้าร่วมแล้ว" : "เข้าร่วม"}
+                          </Button>
+                        </fetcher.Form>
+                      )}
                       <EditEventDialog event={event} />
                       <Button variant="ghost" size="sm" asChild>
                         <Link to={`/events/${event.id}`}>ดูรายละเอียด</Link>

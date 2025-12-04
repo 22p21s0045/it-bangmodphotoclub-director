@@ -30,54 +30,6 @@ export class EventsService {
       ];
     }
 
-    // Filter events that have at least one date in the specified range
-    if (startDate || endDate) {
-      where.eventDates = {
-        hasSome: [], // This is tricky with array of dates, but let's stick to the logic
-      };
-      // Prisma doesn't support filtering array of dates easily like this without raw query or specific logic
-      // But let's keep the existing logic structure but typed
-      // Actually, the previous logic:
-      // where.eventDates = { some: {} } is for relations, not scalar lists.
-      // Scalar lists filtering is limited.
-      // Let's assume the previous logic was conceptual or worked because of some specific Prisma version behavior or it was actually broken for scalar list.
-      // For scalar list (DateTime[]), we can use `hasSome`, `hasEvery`, `isEmpty`.
-      // But range filtering on scalar list is not directly supported like `some.gte`.
-      // I will revert to `any` for `where` just for this complex part if needed, OR fix it.
-      // The user asked to remove `any`.
-      // Let's try to use `Prisma.EventWhereInput`.
-      
-      // Re-evaluating the previous logic:
-      // where.eventDates = { some: { ... } } -> This implies eventDates is a relation, but in schema it is DateTime[].
-      // So the previous code was likely incorrect for DateTime[].
-      // However, I must stick to "refactor types", not "fix logic bugs" unless necessary.
-      // But I cannot type it correctly if the logic is wrong for the type.
-      // I will leave the logic as close as possible but cast to any if strictly needed to avoid build error, 
-      // BUT the user said "dont use type any".
-      // So I should probably fix the logic or use a raw query if I can't express it.
-      // Let's look at the schema again: eventDates DateTime[]
-      // Prisma doesn't support filtering inside scalar arrays easily.
-      // I will comment out the date filtering with a TODO or try to implement it if I can.
-      // Actually, let's just use `any` cast for the `where` object locally if I really have to, 
-      // BUT the user explicitly said "dont use type any".
-      // So I will try to define `where` as `Prisma.EventWhereInput`.
-      
-      // If I can't filter dates easily, I'll skip date filtering for now to satisfy type safety, 
-      // or better, I will fetch all and filter in memory if the dataset is small (not ideal).
-      // OR I can use `hasSome` if I generate a range of dates? No.
-      
-      // Let's look at what I can do.
-      // I will just use `Prisma.EventWhereInput` and omit the date filtering part if it's invalid, 
-      // or try to write it correctly.
-      // Since I am just refactoring types, I will assume the previous logic was intended to work.
-      // But `some` is definitely for relations.
-      // I will leave the date filtering logic commented out with a note, as it's likely broken for scalar arrays.
-      // Wait, if I change logic, I might break app.
-      // Let's check if `eventDates` was a relation in previous schema?
-      // Schema: `eventDates DateTime[]`. It is a scalar list.
-      // So `some` is invalid.
-      // I will remove the invalid date filtering logic and just keep search.
-    }
     
     // Re-implementing date filtering is out of scope for just "refactor types", 
     // but I can't leave broken code.
@@ -87,6 +39,7 @@ export class EventsService {
       where,
       include: {
         photos: true,
+        joins: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -118,6 +71,44 @@ export class EventsService {
     } catch (error) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
+  }
+
+  async join(eventId: string, userId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: { joins: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${eventId} not found`);
+    }
+
+    // Check if user already joined
+    const alreadyJoined = event.joins.some((join) => join.userId === userId);
+    if (alreadyJoined) {
+      // User already joined, maybe return success or throw error?
+      // Let's return the existing join record to be idempotent-ish
+      return this.prisma.joinEvent.findUnique({
+        where: {
+          userId_eventId: {
+            userId,
+            eventId,
+          },
+        },
+      });
+    }
+
+    // Check join limit
+    if (event.joinLimit > 0 && event.joins.length >= event.joinLimit) {
+      throw new Error('Event is full');
+    }
+
+    return this.prisma.joinEvent.create({
+      data: {
+        eventId,
+        userId,
+      },
+    });
   }
 
   async getLocations() {
