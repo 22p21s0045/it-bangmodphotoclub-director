@@ -19,11 +19,22 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ error: "Event ID is required" }, { status: 400 });
   }
 
+  const targetUserId = formData.get("userId")?.toString();
+
+  let userIdToJoin = user.id;
+
+  if (targetUserId && targetUserId !== user.id) {
+    if (user.role !== "ADMIN") {
+      return json({ error: "Unauthorized to assign other users" }, { status: 403 });
+    }
+    userIdToJoin = targetUserId;
+  }
+
   const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
 
   try {
     await axios.post(`${backendUrl}/events/${eventId}/join`, {
-      userId: user.id,
+      userId: userIdToJoin,
     });
     return json({ success: true });
   } catch (error) {

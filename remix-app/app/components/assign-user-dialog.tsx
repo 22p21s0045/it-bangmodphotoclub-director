@@ -14,7 +14,7 @@ import {
 import { Input } from "~/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { ScrollArea } from "./ui/scroll-area";
-import axios from "axios";
+import { apiClient } from "~/lib/api-client";
 
 interface User {
   id: string;
@@ -48,8 +48,7 @@ export function AssignUserDialog({ eventId, joinedUserIds, onAssign }: AssignUse
     try {
       // In a real app, we should have a search endpoint. 
       // For now, we'll fetch all and filter client-side as per current backend capabilities.
-      const backendUrl = "http://localhost:3000"; // Should use env var
-      const res = await axios.get(`${backendUrl}/users`);
+      const res = await apiClient.get("/users");
       setUsers(res.data);
     } catch (error) {
       console.error("Failed to load users", error);
@@ -65,8 +64,8 @@ export function AssignUserDialog({ eventId, joinedUserIds, onAssign }: AssignUse
 
   const handleAssign = (userId: string) => {
     fetcher.submit(
-      { userId },
-      { method: "post", action: `/api/events/join?eventId=${eventId}` }
+      { userId, eventId },
+      { method: "post", action: `/api/events/join` }
     );
   };
 
