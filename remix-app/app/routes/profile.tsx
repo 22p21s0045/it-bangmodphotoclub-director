@@ -85,6 +85,58 @@ export default function Profile() {
   const isSubmitting = navigation.state === "submitting";
 
   const [avatarPreview, setAvatarPreview] = useState(user.avatar);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    setIsUploading(true);
+
+    try {
+      const backendUrl = "http://localhost:3000";
+      
+      // 1. Get Presigned URL
+      const { data } = await axios.post(`${backendUrl}/users/avatar/upload-url`, {
+        filename: file.name,
+        userId: user.id,
+      });
+
+      // 2. Upload to MinIO
+      await axios.put(data.url, file, {
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      // 3. Update Preview and Hidden Input
+      // The path returned from backend is relative to bucket, we need full URL if accessing directly or just path if proxying
+      // Assuming we can use the path directly if we have a way to serve it, or we construct the URL
+      // For now, let's assume the backend returns a usable path or we construct it.
+      // Actually, Minio usually needs a signed GET url or a public bucket.
+      // Let's assume public bucket for avatars or we use the path.
+      // Ideally we should use the full URL.
+      
+      // Since we don't have a public URL easily without configuration, let's try to use the path and assume the frontend knows how to display it 
+      // OR better, let's ask the backend for the public URL or just use the path if it's a public bucket.
+      // Given the previous code used `data.path`, let's use that.
+      
+      // Wait, the previous code in events.$id.upload.tsx used `data.path` to save to DB.
+      // Here we want to update the input value so when form submits, it saves the new URL.
+      
+      // Let's construct a public URL if possible, or just use the path if the app handles it.
+      // For Minio localhost:9000/photos/...
+      
+      const publicUrl = `http://localhost:9000/photos/${data.path}`;
+      setAvatarPreview(publicUrl);
+      
+    } catch (error) {
+      console.error("Upload failed", error);
+      alert("อัปโหลดรูปภาพไม่สำเร็จ");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   useEffect(() => {
     setAvatarPreview(user.avatar);
@@ -137,15 +189,24 @@ export default function Profile() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="avatar">รูปโปรไฟล์ (URL)</Label>
-              <Input 
-                id="avatar" 
-                name="avatar" 
-                defaultValue={user.avatar} 
-                onChange={(e) => setAvatarPreview(e.target.value)}
-                placeholder="https://example.com/avatar.jpg"
-              />
-              <p className="text-xs text-muted-foreground">ใส่ลิงก์รูปภาพจากอินเทอร์เน็ต</p>
+              <Label htmlFor="avatar">รูปโปรไฟล์</Label>
+              <div className="flex gap-2">
+                <Input 
+                  id="avatar" 
+                  name="avatar" 
+                  value={avatarPreview} 
+                  onChange={(e) => setAvatarPreview(e.target.value)}
+                  placeholder="https://example.com/avatar.jpg"
+                  className="hidden"
+                />
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  disabled={isUploading}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">อัปโหลดรูปภาพ (JPG, PNG)</p>
             </div>
 
             <div className="space-y-2">

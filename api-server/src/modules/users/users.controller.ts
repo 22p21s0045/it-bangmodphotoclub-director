@@ -10,6 +10,11 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Post('avatar/upload-url')
+  async getAvatarUploadUrl(@Body() body: { filename: string; userId: string }) {
+    return this.usersService.generateAvatarUploadUrl(body.userId, body.filename);
+  }
+
   @Post()
   create(@Body() body: any) {
     return this.usersService.create(body);
