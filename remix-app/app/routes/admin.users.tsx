@@ -208,8 +208,15 @@ export default function AdminUsers() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user: any) => (
-              <TableRow key={user.id} className={!user.isActive ? "bg-muted/50" : ""}>
+            {users.map((user: any, index: number) => (
+              <TableRow 
+                key={user.id} 
+                className={`
+                  ${!user.isActive ? "bg-muted/50" : ""} 
+                  ${user.isActive && index % 2 === 0 ? "bg-gray-100" : "bg-white"}
+                  hover:bg-gray-200 transition-colors
+                `}
+              >
                 <TableCell>
                   <Avatar>
                     <AvatarImage src={user.avatar} />
@@ -243,18 +250,24 @@ export default function AdminUsers() {
                   {user.id !== currentUser.id && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-accent cursor-pointer">
                           <span className="sr-only">Open menu</span>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>การจัดการ</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleRoleChange(user)}>
+                        <DropdownMenuItem 
+                          onClick={() => handleRoleChange(user)} 
+                          className="cursor-pointer hover:!bg-gray-200 transition-colors"
+                        >
                           <UserCog className="mr-2 h-4 w-4" />
                           เปลี่ยนบทบาท
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleStatus(user)}>
+                        <DropdownMenuItem 
+                          onClick={() => handleToggleStatus(user)} 
+                          className="cursor-pointer hover:!bg-gray-200 transition-colors"
+                        >
                           {user.isActive ? (
                             <>
                               <Ban className="mr-2 h-4 w-4 text-orange-500" />
@@ -269,7 +282,7 @@ export default function AdminUsers() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
-                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                          className="text-red-600 focus:text-red-600 cursor-pointer hover:!bg-gray-200 transition-colors"
                           onClick={() => handleDelete(user)}
                         >
                           <Trash className="mr-2 h-4 w-4" />
