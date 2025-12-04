@@ -54,6 +54,14 @@ export function EditEventDialog({ event }: EditEventDialogProps) {
       const dateStrings = eventDates.map(date => date.toISOString());
       formData.set("eventDates", JSON.stringify(dateStrings));
     }
+
+    // Default values for joinLimit and activityHours
+    if (!formData.get("joinLimit")) {
+      formData.set("joinLimit", "0");
+    }
+    if (!formData.get("activityHours")) {
+      formData.set("activityHours", "0");
+    }
     
     fetcher.submit(formData, { method: "post", action: "/api/events/update" });
   };

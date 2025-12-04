@@ -23,6 +23,7 @@ export async function action({ request }: ActionFunctionArgs) {
       location,
       eventDates,
       joinLimit: joinLimit ? parseInt(joinLimit.toString()) : 0,
+      activityHours: formData.get("activityHours") ? parseInt(formData.get("activityHours")!.toString()) : 0,
       submissionDeadline,
     });
     return json({ success: true });

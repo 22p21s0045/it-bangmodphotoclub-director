@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { Search, Calendar as CalendarIcon } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
@@ -72,11 +72,6 @@ export default function Events() {
         <h1 className="text-3xl font-bold tracking-tight">กิจกรรม</h1>
         <div className="flex items-center gap-2">
             <CreateEventDialog />
-            <Button variant="outline" asChild>
-                <Link to="/calendar" className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" /> ปฏิทิน
-                </Link>
-            </Button>
         </div>
       </div>
 
