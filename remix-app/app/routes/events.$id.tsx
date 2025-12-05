@@ -12,6 +12,7 @@ import { AssignUserDialog } from "~/components/assign-user-dialog";
 import { LeaveEventDialog } from "~/components/leave-event-dialog";
 import { RemoveUserDialog } from "~/components/remove-user-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { EventStatusStepper } from "~/components/event-status-stepper";
 import { sessionStorage } from "~/session.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
@@ -61,17 +62,12 @@ export default function EventDetail() {
              const isUserJoined = user && resolvedEvent.joins?.some((j: any) => j.userId === user.id);
              return (
               <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <div className="h-64 md:h-96 bg-gray-100 relative">
-                  {resolvedEvent.coverImage ? (
-                    <img src={resolvedEvent.coverImage} alt={resolvedEvent.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                      <CalendarIcon className="w-16 h-16" />
-                    </div>
-                  )}
-                </div>
+
 
                 <div className="p-8">
+                  <div className="mb-8">
+                    <EventStatusStepper currentStatus={resolvedEvent.status} />
+                  </div>
                   <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
                     <div>
                       <h1 className="text-4xl font-bold text-foreground mb-2">{resolvedEvent.title}</h1>

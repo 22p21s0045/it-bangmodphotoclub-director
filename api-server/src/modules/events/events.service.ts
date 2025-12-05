@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma, EventStatus } from '@prisma/client';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 
@@ -16,7 +16,7 @@ export class EventsService {
       activityHours: data.activityHours,
       eventDates: data.eventDates ? data.eventDates.map((date) => new Date(date)) : [],
       submissionDeadline: data.submissionDeadline ? new Date(data.submissionDeadline) : null,
-      status: data.status,
+      status: EventStatus.UPCOMING,
     };
     return this.prisma.event.create({ data: eventData });
   }
@@ -79,6 +79,44 @@ export class EventsService {
       },
     });
     if (!event) throw new NotFoundException(`Event with ID ${id} not found`);
+
+    // Check if event date has passed and status is UPCOMING
+    if (event.status === EventStatus.UPCOMING && event.eventDates.length > 0) {
+      const now = new Date();
+      // Check if any event date is in the past (or today)
+      // Using the earliest date to determine if the event has "started" or "arrived"
+      // If the requirement is "when the event date arrives", we can check if now >= startDate
+      
+      // Sort dates to find the earliest one
+      const sortedDates = [...event.eventDates].sort((a, b) => a.getTime() - b.getTime());
+      const startDate = sortedDates[0];
+
+      if (now >= startDate) {
+        // Update status to PENDING_RAW
+        const updatedEvent = await this.prisma.event.update({
+          where: { id },
+          data: { status: EventStatus.PENDING_RAW },
+          include: { 
+            photos: true, 
+            joins: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    avatar: true,
+                    email: true,
+                    role: true,
+                  }
+                }
+              }
+            } 
+          },
+        });
+        return updatedEvent;
+      }
+    }
+
     return event;
   }
 
