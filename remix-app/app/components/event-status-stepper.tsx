@@ -18,7 +18,7 @@ export function EventStatusStepper({ currentStatus, className }: EventStatusStep
   const steps = [
     {
       id: EventStatus.UPCOMING,
-      label: "กำลังหาคน",
+      label: "เปิดรับ",
       icon: Circle,
     },
     {

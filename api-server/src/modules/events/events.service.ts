@@ -175,11 +175,15 @@ export class EventsService {
       },
     });
 
-    // Check if limit reached after join
-    if (event.joinLimit > 0 && event.joins.length + 1 >= event.joinLimit) {
+    // Check if limit reached after join or if it's an unlimited event with at least one participant
+    const currentParticipants = event.joins.length + 1;
+    const isLimitReached = event.joinLimit > 0 && currentParticipants >= event.joinLimit;
+    const isUnlimitedAndActive = event.joinLimit === 0 && currentParticipants >= 1;
+
+    if (isLimitReached || isUnlimitedAndActive) {
       await this.prisma.event.update({
         where: { id: eventId },
-        data: { status: 'PENDING_RAW' },
+        data: { status: EventStatus.PENDING_RAW },
       });
     }
 
