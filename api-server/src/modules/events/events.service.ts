@@ -130,12 +130,22 @@ export class EventsService {
       throw new BadRequestException('กิจกรรมนี้มีผู้เข้าร่วมครบจำนวนแล้ว');
     }
 
-    return this.prisma.joinEvent.create({
+    const join = await this.prisma.joinEvent.create({
       data: {
         eventId,
         userId,
       },
     });
+
+    // Check if limit reached after join
+    if (event.joinLimit > 0 && event.joins.length + 1 >= event.joinLimit) {
+      await this.prisma.event.update({
+        where: { id: eventId },
+        data: { status: 'PENDING_RAW' },
+      });
+    }
+
+    return join;
   }
 
   async leave(eventId: string, userId: string) {

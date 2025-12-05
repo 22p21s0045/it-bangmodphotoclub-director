@@ -181,17 +181,24 @@ export default function Events() {
                           {event.joinLimit > 0 ? `${event.joinLimit} คน` : "ไม่จำกัด"}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={
-                            event.status === 'COMPLETED' ? 'default' :
-                            event.status === 'PENDING_EDIT' ? 'secondary' :
-                            event.status === 'PENDING_RAW' ? 'outline' :
-                            'destructive'
-                          }>
-                            {event.status === 'COMPLETED' ? 'เสร็จสิ้น' :
-                             event.status === 'PENDING_EDIT' ? 'รอแต่งรูป' :
-                             event.status === 'PENDING_RAW' ? 'รอไฟล์ RAW' :
-                             'กำลังหาคน'}
-                          </Badge>
+                          {(() => {
+                            const isFull = event.joinLimit > 0 && event.joins && event.joins.length >= event.joinLimit;
+                            const displayStatus = (event.status === 'UPCOMING' && isFull) ? 'PENDING_RAW' : event.status;
+                            
+                            return (
+                              <Badge variant={
+                                displayStatus === 'COMPLETED' ? 'default' :
+                                displayStatus === 'PENDING_EDIT' ? 'secondary' :
+                                displayStatus === 'PENDING_RAW' ? 'outline' :
+                                'destructive'
+                              }>
+                                {displayStatus === 'COMPLETED' ? 'เสร็จสิ้น' :
+                                 displayStatus === 'PENDING_EDIT' ? 'รอแต่งรูป' :
+                                 displayStatus === 'PENDING_RAW' ? 'รอไฟล์ RAW' :
+                                 'กำลังหาคน'}
+                              </Badge>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell>
                           <div className="flex -space-x-3 overflow-hidden p-1">
