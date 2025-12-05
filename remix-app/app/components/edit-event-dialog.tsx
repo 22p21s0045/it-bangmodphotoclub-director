@@ -78,7 +78,7 @@ export function EditEventDialog({ event }: EditEventDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
+        <Button className="bg-black text-white hover:bg-black/80" size="sm">
           <Pencil className="w-4 h-4 mr-1" /> แก้ไข
         </Button>
       </DialogTrigger>

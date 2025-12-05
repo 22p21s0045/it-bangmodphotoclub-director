@@ -35,8 +35,7 @@ export function LeaveEventDialog({ eventId, userId, isUserJoined }: LeaveEventDi
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button 
-          variant="outline" 
-          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          variant="destructive" 
         >
           <UserMinus className="w-4 h-4 mr-2" />
           ถอนตัว
