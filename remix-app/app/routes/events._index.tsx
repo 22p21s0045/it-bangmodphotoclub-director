@@ -1,5 +1,5 @@
 import { json, defer, type LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useSubmit, Link, useFetcher, Await } from "@remix-run/react";
+import { useLoaderData, useSubmit, Link, useFetcher, Await, useNavigate } from "@remix-run/react";
 import { sessionStorage } from "~/session.server";
 import { useState, useEffect, Suspense } from "react";
 import { EventListSkeleton } from "~/components/skeletons";
@@ -69,6 +69,7 @@ export default function Events() {
   const { eventsResponse, search, startDate, endDate, user } = useLoaderData<typeof loader>();
   const submit = useSubmit();
   const fetcher = useFetcher();
+  const navigate = useNavigate();
   
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [searchValue, setSearchValue] = useState(search);
@@ -281,7 +282,7 @@ export default function Events() {
                                   <TableRow 
                                     key={event.id}
                                     className="hover:bg-muted/50 transition-colors cursor-pointer"
-                                    onClick={() => window.location.href = `/events/${event.id}`}
+                                    onClick={() => navigate(`/events/${event.id}`)}
                                   >
                                     <TableCell className="font-medium">
                                       <div className="flex flex-col py-1">
