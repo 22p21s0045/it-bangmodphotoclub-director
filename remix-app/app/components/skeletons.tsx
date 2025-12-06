@@ -161,3 +161,44 @@ export function ProfileSkeleton() {
     </div>
   );
 }
+
+export function CalendarSkeleton() {
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-24" />
+        </div>
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-9 w-9 rounded-md" />
+        </div>
+      </div>
+
+      {/* Calendar Grid */}
+      <Card className="flex-1 min-h-0 flex flex-col p-4">
+        {/* Week Headers */}
+        <div className="grid grid-cols-7 mb-2 flex-shrink-0">
+          {["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"].map((day) => (
+            <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Cells */}
+        <div className="grid grid-cols-7 gap-1 flex-1 min-h-0 overflow-y-auto">
+          {Array.from({ length: 35 }).map((_, i) => (
+            <div key={i} className="p-2 rounded-md bg-muted/20 min-h-[80px]">
+              <Skeleton className="h-4 w-6 mb-2" />
+              {i % 5 === 0 && <Skeleton className="h-3 w-full mt-1" />}
+              {i % 7 === 2 && <Skeleton className="h-3 w-3/4 mt-1" />}
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}

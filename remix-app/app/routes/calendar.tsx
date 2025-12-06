@@ -1,5 +1,5 @@
 import { json, LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, Link, useSearchParams } from "@remix-run/react";
+import { useLoaderData, Link, useSearchParams, useNavigation } from "@remix-run/react";
 import axios from "axios";
 import { 
   format, 
@@ -14,6 +14,7 @@ import {
   subMonths 
 } from "date-fns";
 import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { CalendarSkeleton } from "~/components/skeletons";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -48,6 +49,9 @@ export default function Calendar() {
   const { events, currentDate } = useLoaderData<typeof loader>();
   const date = new Date(currentDate);
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigation = useNavigation();
+  
+  const isLoading = navigation.state === "loading";
 
   const monthStart = startOfMonth(date);
   const monthEnd = endOfMonth(monthStart);
@@ -65,6 +69,14 @@ export default function Calendar() {
     const prev = subMonths(date, 1);
     setSearchParams({ date: prev.toISOString() });
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6 h-full">
+        <CalendarSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6">
@@ -117,7 +129,7 @@ export default function Calendar() {
                                 <Link 
                                     key={event.id} 
                                     to={`/events/${event.id}`}
-                                    className="block text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded truncate hover:bg-blue-100 transition"
+                                    className="block text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded truncate hover:bg-blue-100 dark:hover:bg-blue-900/50 transition"
                                     title={event.title}
                                 >
                                     {event.title}
