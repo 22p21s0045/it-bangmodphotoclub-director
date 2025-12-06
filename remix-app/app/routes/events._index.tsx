@@ -185,150 +185,229 @@ export default function Events() {
                             ไม่พบกิจกรรม
                         </div>
                       ) : (
-                        <div className="flex-1 min-h-0 overflow-auto relative">
-                          <table className="w-full caption-bottom text-sm">
-                            <TableHeader className="bg-gray-100">
-                              <TableRow>
-                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">ชื่องาน</TableHead>
-                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">วันที่จัดงาน</TableHead>
-                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">สถานที่</TableHead>
-                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">จำนวนที่ต้องการ</TableHead>
-                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">สถานะ</TableHead>
-                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">ผู้รับผิดชอบ</TableHead>
-                                <TableHead className="text-right py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">จัดการ</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {events.map((event: any) => (
-                                <TableRow 
-                                  key={event.id}
-                                  className="hover:bg-gray-50/50 transition-colors"
+                        <>
+                          {/* Mobile Card View */}
+                          <div className="md:hidden flex-1 min-h-0 overflow-auto p-4 space-y-3">
+                            {events.map((event: any) => {
+                              const isFull = event.joinLimit > 0 && event.joins && event.joins.length >= event.joinLimit;
+                              const displayStatus = (event.status === 'UPCOMING' && isFull) ? 'PENDING_RAW' : event.status;
+                              
+                              return (
+                                <Link 
+                                  key={event.id} 
+                                  to={`/events/${event.id}`}
+                                  className="block bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
                                 >
-                                  <TableCell className="font-medium">
-                                    <div className="flex flex-col py-1">
-                                      <span className="text-base">{event.title}</span>
-                                      <span className="text-xs text-muted-foreground line-clamp-1">{event.description}</span>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex flex-col">
-                                      {event.eventDates && event.eventDates.length > 0 ? (
-                                        <>
-                                          <span>
-                                            {event.eventDates.length === 1
-                                              ? format(new Date(event.eventDates[0]), "d MMM yyyy", { locale: th })
-                                              : `${event.eventDates.length} วัน`}
-                                          </span>
-                                          {event.eventDates.length > 1 && (
-                                            <span className="text-xs text-muted-foreground">
-                                              {format(new Date(event.eventDates[0]), "d MMM", { locale: th })} - {format(new Date(event.eventDates[event.eventDates.length - 1]), "d MMM yyyy", { locale: th })}
-                                            </span>
-                                          )}
-                                        </>
-                                      ) : (
-                                        <span className="text-muted-foreground">-</span>
+                                  <div className="flex justify-between items-start gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="font-semibold text-base truncate">{event.title}</h3>
+                                      {event.description && (
+                                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{event.description}</p>
                                       )}
                                     </div>
-                                  </TableCell>
-                                  <TableCell>{event.location || "-"}</TableCell>
-                                  <TableCell>
-                                    {event.joinLimit > 0 ? (
-                                      <Badge variant="secondary" className="font-normal">
-                                        {event.joinLimit} คน
-                                      </Badge>
-                                    ) : (
-                                      <span className="text-muted-foreground">ไม่จำกัด</span>
+                                    <Badge variant={
+                                      displayStatus === 'COMPLETED' ? 'default' :
+                                      displayStatus === 'PENDING_EDIT' ? 'secondary' :
+                                      displayStatus === 'PENDING_RAW' ? 'outline' :
+                                      'destructive'
+                                    } className="capitalize flex-shrink-0">
+                                      {displayStatus === 'COMPLETED' ? 'เสร็จสิ้น' :
+                                       displayStatus === 'PENDING_EDIT' ? 'รอแต่งรูป' :
+                                       displayStatus === 'PENDING_RAW' ? 'รอไฟล์ RAW' :
+                                       'กำลังหาคน'}
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="mt-3 flex flex-wrap gap-3 text-sm text-muted-foreground">
+                                    {event.eventDates && event.eventDates.length > 0 && (
+                                      <span className="flex items-center gap-1">
+                                        <span className="text-gray-400">📅</span>
+                                        {event.eventDates.length === 1
+                                          ? format(new Date(event.eventDates[0]), "d MMM yyyy", { locale: th })
+                                          : `${event.eventDates.length} วัน`}
+                                      </span>
                                     )}
-                                  </TableCell>
-                                  <TableCell>
-                                    {(() => {
-                                      const isFull = event.joinLimit > 0 && event.joins && event.joins.length >= event.joinLimit;
-                                      const displayStatus = (event.status === 'UPCOMING' && isFull) ? 'PENDING_RAW' : event.status;
-                                      
-                                      return (
-                                        <Badge variant={
-                                          displayStatus === 'COMPLETED' ? 'default' :
-                                          displayStatus === 'PENDING_EDIT' ? 'secondary' :
-                                          displayStatus === 'PENDING_RAW' ? 'outline' :
-                                          'destructive'
-                                        } className="capitalize">
-                                          {displayStatus === 'COMPLETED' ? 'เสร็จสิ้น' :
-                                           displayStatus === 'PENDING_EDIT' ? 'รอแต่งรูป' :
-                                           displayStatus === 'PENDING_RAW' ? 'รอไฟล์ RAW' :
-                                           'กำลังหาคน'}
-                                        </Badge>
-                                      );
-                                    })()}
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex -space-x-3 overflow-hidden p-1">
-                                      {event.joins && event.joins.length > 0 ? (
-                                        event.joins.map((join: any) => (
-                                          <Avatar 
-                                            key={join.id} 
-                                            className="inline-block h-8 w-8 rounded-full ring-2 ring-white cursor-help"
-                                            title={join.user?.name || "User"}
-                                          >
-                                            <AvatarImage src={join.user?.avatar} />
-                                            <AvatarFallback>{join.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-                                          </Avatar>
-                                        ))
-                                      ) : (
-                                        <span className="text-muted-foreground text-xs">-</span>
+                                    {event.location && (
+                                      <span className="flex items-center gap-1">
+                                        <span className="text-gray-400">📍</span>
+                                        {event.location}
+                                      </span>
+                                    )}
+                                    <span className="flex items-center gap-1">
+                                      <span className="text-gray-400">👥</span>
+                                      {event.joins?.length || 0}/{event.joinLimit > 0 ? event.joinLimit : '∞'}
+                                    </span>
+                                  </div>
+                                  
+                                  {event.joins && event.joins.length > 0 && (
+                                    <div className="mt-3 flex -space-x-2">
+                                      {event.joins.slice(0, 5).map((join: any) => (
+                                        <Avatar 
+                                          key={join.id} 
+                                          className="h-7 w-7 ring-2 ring-white"
+                                        >
+                                          <AvatarImage src={join.user?.avatar} />
+                                          <AvatarFallback className="text-xs">{join.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                                        </Avatar>
+                                      ))}
+                                      {event.joins.length > 5 && (
+                                        <div className="h-7 w-7 rounded-full bg-gray-100 ring-2 ring-white flex items-center justify-center text-xs text-gray-500">
+                                          +{event.joins.length - 5}
+                                        </div>
                                       )}
                                     </div>
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                          <span className="sr-only">Open menu</span>
-                                          <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>การจัดการ</DropdownMenuLabel>
-                                        <DropdownMenuItem asChild>
-                                          <Link to={`/events/${event.id}`} className="cursor-pointer">
-                                            <Eye className="mr-2 h-4 w-4" /> ดูรายละเอียด
-                                          </Link>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => setEditingEvent(event)} className="cursor-pointer">
-                                          <Pencil className="mr-2 h-4 w-4" /> แก้ไข
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        {user && (
-                                          <DropdownMenuItem 
-                                            className="w-full cursor-pointer"
-                                            disabled={event.joins?.some((j: any) => j.userId === user.id) || fetcher.state === "submitting"}
-                                            onSelect={() => {
-                                              fetcher.submit(
-                                                { eventId: event.id }, 
-                                                { method: "post", action: "/api/events/join" }
-                                              );
-                                            }}
-                                          >
-                                             <UserPlus className="mr-2 h-4 w-4" />
-                                             {event.joins?.some((j: any) => j.userId === user.id) ? "เข้าร่วมแล้ว" : "เข้าร่วม"}
-                                          </DropdownMenuItem>
-                                        )}
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </TableCell>
+                                  )}
+                                </Link>
+                              );
+                            })}
+                          </div>
+
+                          {/* Desktop Table View */}
+                          <div className="hidden md:block flex-1 min-h-0 overflow-auto relative">
+                            <table className="w-full caption-bottom text-sm">
+                              <TableHeader className="bg-gray-100">
+                                <TableRow>
+                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">ชื่องาน</TableHead>
+                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">วันที่จัดงาน</TableHead>
+                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">สถานที่</TableHead>
+                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">จำนวนที่ต้องการ</TableHead>
+                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">สถานะ</TableHead>
+                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">ผู้รับผิดชอบ</TableHead>
+                                  <TableHead className="text-right py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">จัดการ</TableHead>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </table>
-                        </div>
+                              </TableHeader>
+                              <TableBody>
+                                {events.map((event: any) => (
+                                  <TableRow 
+                                    key={event.id}
+                                    className="hover:bg-gray-50/50 transition-colors"
+                                  >
+                                    <TableCell className="font-medium">
+                                      <div className="flex flex-col py-1">
+                                        <span className="text-base">{event.title}</span>
+                                        <span className="text-xs text-muted-foreground line-clamp-1">{event.description}</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex flex-col">
+                                        {event.eventDates && event.eventDates.length > 0 ? (
+                                          <>
+                                            <span>
+                                              {event.eventDates.length === 1
+                                                ? format(new Date(event.eventDates[0]), "d MMM yyyy", { locale: th })
+                                                : `${event.eventDates.length} วัน`}
+                                            </span>
+                                            {event.eventDates.length > 1 && (
+                                              <span className="text-xs text-muted-foreground">
+                                                {format(new Date(event.eventDates[0]), "d MMM", { locale: th })} - {format(new Date(event.eventDates[event.eventDates.length - 1]), "d MMM yyyy", { locale: th })}
+                                              </span>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <span className="text-muted-foreground">-</span>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>{event.location || "-"}</TableCell>
+                                    <TableCell>
+                                      {event.joinLimit > 0 ? (
+                                        <Badge variant="secondary" className="font-normal">
+                                          {event.joinLimit} คน
+                                        </Badge>
+                                      ) : (
+                                        <span className="text-muted-foreground">ไม่จำกัด</span>
+                                      )}
+                                    </TableCell>
+                                    <TableCell>
+                                      {(() => {
+                                        const isFull = event.joinLimit > 0 && event.joins && event.joins.length >= event.joinLimit;
+                                        const displayStatus = (event.status === 'UPCOMING' && isFull) ? 'PENDING_RAW' : event.status;
+                                        
+                                        return (
+                                          <Badge variant={
+                                            displayStatus === 'COMPLETED' ? 'default' :
+                                            displayStatus === 'PENDING_EDIT' ? 'secondary' :
+                                            displayStatus === 'PENDING_RAW' ? 'outline' :
+                                            'destructive'
+                                          } className="capitalize">
+                                            {displayStatus === 'COMPLETED' ? 'เสร็จสิ้น' :
+                                             displayStatus === 'PENDING_EDIT' ? 'รอแต่งรูป' :
+                                             displayStatus === 'PENDING_RAW' ? 'รอไฟล์ RAW' :
+                                             'กำลังหาคน'}
+                                          </Badge>
+                                        );
+                                      })()}
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex -space-x-3 overflow-hidden p-1">
+                                        {event.joins && event.joins.length > 0 ? (
+                                          event.joins.map((join: any) => (
+                                            <Avatar 
+                                              key={join.id} 
+                                              className="inline-block h-8 w-8 rounded-full ring-2 ring-white cursor-help"
+                                              title={join.user?.name || "User"}
+                                            >
+                                              <AvatarImage src={join.user?.avatar} />
+                                              <AvatarFallback>{join.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                                            </Avatar>
+                                          ))
+                                        ) : (
+                                          <span className="text-muted-foreground text-xs">-</span>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" className="h-8 w-8 p-0">
+                                            <span className="sr-only">Open menu</span>
+                                            <MoreHorizontal className="h-4 w-4" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuLabel>การจัดการ</DropdownMenuLabel>
+                                          <DropdownMenuItem asChild>
+                                            <Link to={`/events/${event.id}`} className="cursor-pointer">
+                                              <Eye className="mr-2 h-4 w-4" /> ดูรายละเอียด
+                                            </Link>
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => setEditingEvent(event)} className="cursor-pointer">
+                                            <Pencil className="mr-2 h-4 w-4" /> แก้ไข
+                                          </DropdownMenuItem>
+                                          <DropdownMenuSeparator />
+                                          {user && (
+                                            <DropdownMenuItem 
+                                              className="w-full cursor-pointer"
+                                              disabled={event.joins?.some((j: any) => j.userId === user.id) || fetcher.state === "submitting"}
+                                              onSelect={() => {
+                                                fetcher.submit(
+                                                  { eventId: event.id }, 
+                                                  { method: "post", action: "/api/events/join" }
+                                                );
+                                              }}
+                                            >
+                                               <UserPlus className="mr-2 h-4 w-4" />
+                                               {event.joins?.some((j: any) => j.userId === user.id) ? "เข้าร่วมแล้ว" : "เข้าร่วม"}
+                                            </DropdownMenuItem>
+                                          )}
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </table>
+                          </div>
+                        </>
                       )}
 
                       {/* Pagination Controls */}
-                      <div className="flex items-center justify-between px-2 py-4 border-t flex-shrink-0">
-                        <div className="flex-1 text-sm text-muted-foreground">
+                      <div className="flex flex-col md:flex-row items-center justify-between px-4 py-4 border-t flex-shrink-0 gap-3">
+                        <div className="text-sm text-muted-foreground text-center md:text-left">
                           แสดง {(meta.page - 1) * meta.limit + 1} ถึง {Math.min(meta.page * meta.limit, meta.total)} จาก {meta.total} รายการ
                         </div>
-                        <div className="flex items-center space-x-6 lg:space-x-8">
-                          <div className="flex items-center space-x-2">
+                        <div className="flex flex-wrap items-center justify-center gap-4">
+                          <div className="hidden md:flex items-center space-x-2">
                             <p className="text-sm font-medium">แถวต่อหน้า</p>
                             <select
                               className="h-8 w-[70px] rounded-md border border-input bg-transparent px-2 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"

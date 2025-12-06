@@ -65,9 +65,12 @@ export function CreateEventDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>+ สร้างกิจกรรม</Button>
+        <Button className="w-full md:w-auto">
+          <span className="md:hidden">+ สร้าง</span>
+          <span className="hidden md:inline">+ สร้างกิจกรรม</span>
+        </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className="w-full max-w-[95vw] md:max-w-4xl max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gray-50/50">
           <DialogTitle className="text-2xl font-bold text-gray-900">สร้างกิจกรรมใหม่</DialogTitle>
           <DialogDescription className="text-muted-foreground">
