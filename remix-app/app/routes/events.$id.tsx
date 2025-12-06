@@ -5,7 +5,7 @@ import { EventDetailSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft, UserMinus, X } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, ImageIcon, FileText } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
@@ -13,6 +13,8 @@ import { LeaveEventDialog } from "~/components/leave-event-dialog";
 import { RemoveUserDialog } from "~/components/remove-user-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { EventStatusStepper } from "~/components/event-status-stepper";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Badge } from "~/components/ui/badge";
 import { sessionStorage } from "~/session.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
@@ -46,143 +48,238 @@ export default function EventDetail() {
   const { event, user } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
 
-
-
   return (
-    <div className="container mx-auto p-6">
-      <Button variant="ghost" asChild className="mb-6 pl-0 hover:bg-transparent hover:text-primary">
-        <Link to="/events" className="inline-flex items-center">
-            <ArrowLeft className="w-4 h-4 mr-2" /> กลับไปหน้ากิจกรรม
-        </Link>
-      </Button>
+    <div className="min-h-screen bg-muted/30">
+      {/* Header */}
+      <div className="bg-card border-b sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-3">
+          <Button variant="ghost" asChild className="pl-0 hover:bg-transparent hover:text-primary">
+            <Link to="/events" className="inline-flex items-center text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-4 h-4 mr-2" /> กลับไปหน้ากิจกรรม
+            </Link>
+          </Button>
+        </div>
+      </div>
 
       <Suspense fallback={<EventDetailSkeleton />}>
         <Await resolve={event}>
           {(resolvedEvent) => {
-             const isUserJoined = user && resolvedEvent.joins?.some((j: any) => j.userId === user.id);
-             return (
-              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-
-
-                <div className="p-8">
-                  <div className="mb-8">
+            const isUserJoined = user && resolvedEvent.joins?.some((j: any) => j.userId === user.id);
+            const participantCount = resolvedEvent.joins?.length || 0;
+            const isFull = resolvedEvent.joinLimit > 0 && participantCount >= resolvedEvent.joinLimit;
+            
+            return (
+              <div className="container mx-auto px-4 py-6">
+                {/* Status Stepper */}
+                <Card className="mb-6">
+                  <CardContent className="pt-6">
                     <EventStatusStepper currentStatus={resolvedEvent.status} />
-                  </div>
-                  <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
-                    <div>
-                      <h1 className="text-4xl font-bold text-foreground mb-2">{resolvedEvent.title}</h1>
-                      <div className="flex flex-col gap-1 text-muted-foreground mt-2">
-                        <div className="flex items-center gap-4 flex-wrap">
-                          {resolvedEvent.eventDates && resolvedEvent.eventDates.length > 0 && (
-                            <div className="flex flex-col gap-1">
-                              <span className="flex items-center gap-1 font-medium text-foreground">
-                                <CalendarIcon className="w-4 h-4" />
-                                วันที่จัดกิจกรรม ({resolvedEvent.eventDates.length} วัน):
-                              </span>
-                              <div className="flex flex-wrap gap-2 ml-5">
-                                {resolvedEvent.eventDates.map((date: string, index: number) => {
-                                  const eventDate = new Date(date);
-                                  const today = new Date();
-                                  const daysUntil = differenceInDays(eventDate, today);
-                                  
-                                  return (
-                                    <div key={index} className="flex flex-col">
-                                      <span className="text-sm">
-                                        {format(eventDate, "d MMMM yyyy", { locale: th })}
-                                      </span>
-                                      {daysUntil >= 0 && (
-                                        <span className="text-xs text-muted-foreground">
-                                          ({daysUntil === 0 ? "วันนี้" : `อีก ${daysUntil} วัน`})
-                                        </span>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
+                  </CardContent>
+                </Card>
+
+                {/* Two Column Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Main Content - Left Column */}
+                  <div className="lg:col-span-2 space-y-6">
+                    {/* Title & Actions Card */}
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+                              {resolvedEvent.title}
+                            </h1>
+                            <div className="flex flex-wrap gap-2">
+                              {resolvedEvent.location && (
+                                <Badge variant="secondary" className="text-sm font-normal">
+                                  <MapPin className="w-3.5 h-3.5 mr-1.5" />
+                                  {resolvedEvent.location}
+                                </Badge>
+                              )}
+                              {resolvedEvent.activityHours > 0 && (
+                                <Badge variant="secondary" className="text-sm font-normal">
+                                  <Clock className="w-3.5 h-3.5 mr-1.5" />
+                                  {resolvedEvent.activityHours} ชั่วโมงกิจกรรม
+                                </Badge>
+                              )}
+                              <Badge variant={isFull ? "default" : "outline"} className="text-sm font-normal">
+                                <Users className="w-3.5 h-3.5 mr-1.5" />
+                                {participantCount}/{resolvedEvent.joinLimit > 0 ? resolvedEvent.joinLimit : "∞"} คน
+                              </Badge>
                             </div>
-                          )}
-                          {resolvedEvent.location && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              {resolvedEvent.location}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {isUserJoined && (
-                        <LeaveEventDialog 
-                          eventId={resolvedEvent.id} 
-                          userId={user.id} 
-                          isUserJoined={isUserJoined} 
-                        />
-                      )}
-                      <EditEventDialog event={resolvedEvent} />
-                    </div>
-                  </div>
-
-                  <div className="prose max-w-none text-foreground mb-12">
-                    <h3 className="text-xl font-semibold mb-2">เกี่ยวกับกิจกรรมนี้</h3>
-                    <p className="text-muted-foreground">{resolvedEvent.description || "ไม่มีรายละเอียด"}</p>
-                  </div>
-
-                  <div className="mb-12">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-2xl font-bold">ผู้รับผิดชอบ {resolvedEvent.joins?.length || 0} คน</h3>
-                        {user?.role === "ADMIN" && (
-                            <AssignUserDialog 
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0">
+                            {isUserJoined && (
+                              <LeaveEventDialog 
                                 eventId={resolvedEvent.id} 
-                                joinedUserIds={resolvedEvent.joins?.map((j: any) => j.userId) || []}
-                                onAssign={() => {
-                                    // Remix will automatically revalidate the loader
-                                }}
-                            />
-                        )}
-                    </div>
-                    
-                    {resolvedEvent.joins && resolvedEvent.joins.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {resolvedEvent.joins.map((join: any) => (
-                                <div key={join.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
-                                    <div className="flex items-center gap-3 overflow-hidden">
-                                      <Avatar className="h-10 w-10">
-                                          <AvatarImage src={join.user.avatar} />
-                                          <AvatarFallback>{join.user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-                                      </Avatar>
-                                      <div className="flex flex-col overflow-hidden">
-                                          <span className="font-medium truncate">{join.user.name || "User"}</span>
-                                          <span className="text-xs text-muted-foreground truncate">{join.user.email}</span>
-                                      </div>
-                                    </div>
-                                    {user?.role === "ADMIN" && (
-                                      <RemoveUserDialog 
-                                        eventId={resolvedEvent.id}
-                                        userId={join.userId}
-                                        userName={join.user.name || "User"}
-                                      />
-                                    )}
-                                </div>
-                            ))}
+                                userId={user.id} 
+                                isUserJoined={isUserJoined} 
+                              />
+                            )}
+                            <EditEventDialog event={resolvedEvent} />
+                          </div>
                         </div>
-                    ) : (
-                        <div className="text-muted-foreground italic">ยังไม่มีผู้เข้าร่วม</div>
-                    )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Description Card */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-primary" />
+                          เกี่ยวกับกิจกรรมนี้
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground leading-relaxed">
+                          {resolvedEvent.description || "ไม่มีรายละเอียดเพิ่มเติม"}
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    {/* Participants Card */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Users className="w-5 h-5 text-primary" />
+                            ผู้รับผิดชอบ ({participantCount} คน)
+                          </CardTitle>
+                          {user?.role === "ADMIN" && (
+                            <AssignUserDialog 
+                              eventId={resolvedEvent.id} 
+                              joinedUserIds={resolvedEvent.joins?.map((j: any) => j.userId) || []}
+                              onAssign={() => {}}
+                            />
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {resolvedEvent.joins && resolvedEvent.joins.length > 0 ? (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {resolvedEvent.joins.map((join: any) => (
+                              <div key={join.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-muted/50 border">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                  <Avatar className="h-10 w-10">
+                                    <AvatarImage src={join.user.avatar} />
+                                    <AvatarFallback>{join.user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex flex-col overflow-hidden">
+                                    <span className="font-medium truncate">{join.user.name || "User"}</span>
+                                    <span className="text-xs text-muted-foreground truncate">{join.user.email}</span>
+                                  </div>
+                                </div>
+                                {user?.role === "ADMIN" && (
+                                  <RemoveUserDialog 
+                                    eventId={resolvedEvent.id}
+                                    userId={join.userId}
+                                    userName={join.user.name || "User"}
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Users className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                            <p>ยังไม่มีผู้เข้าร่วม</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
 
-                  <div>
-                    <h3 className="text-2xl font-bold mb-6">รูปภาพ ({resolvedEvent.photos?.length || 0})</h3>
-                    {resolvedEvent.photos && resolvedEvent.photos.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {resolvedEvent.photos.map((photo: any) => (
-                                <div key={photo.id} className="aspect-square bg-muted rounded-lg overflow-hidden">
-                                    <img src={photo.thumbnailUrl || photo.url} alt="รูปภาพกิจกรรม" className="w-full h-full object-cover" />
+                  {/* Sidebar - Right Column */}
+                  <div className="space-y-6">
+                    {/* Event Dates Card */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <CalendarIcon className="w-5 h-5 text-primary" />
+                          วันที่จัดงาน
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {resolvedEvent.eventDates && resolvedEvent.eventDates.length > 0 ? (
+                          <div className="space-y-2">
+                            {resolvedEvent.eventDates.map((date: string, index: number) => {
+                              const eventDate = new Date(date);
+                              const today = new Date();
+                              const daysUntil = differenceInDays(eventDate, today);
+                              const isPast = daysUntil < 0;
+                              
+                              return (
+                                <div 
+                                  key={index} 
+                                  className={`p-3 rounded-lg border ${
+                                    isPast 
+                                      ? 'bg-muted/30 opacity-60' 
+                                      : daysUntil === 0 
+                                        ? 'bg-primary/10 border-primary/30' 
+                                        : 'bg-muted/50'
+                                  }`}
+                                >
+                                  <div className="font-semibold text-foreground">
+                                    {format(eventDate, "d MMMM yyyy", { locale: th })}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {format(eventDate, "EEEE", { locale: th })}
+                                  </div>
+                                  {!isPast && (
+                                    <Badge 
+                                      variant={daysUntil === 0 ? "default" : "outline"} 
+                                      className="mt-2 text-xs"
+                                    >
+                                      {daysUntil === 0 ? "วันนี้!" : `อีก ${daysUntil} วัน`}
+                                    </Badge>
+                                  )}
                                 </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground text-center py-4">ยังไม่ได้กำหนดวัน</p>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Photos Card */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <ImageIcon className="w-5 h-5 text-primary" />
+                          รูปภาพ ({resolvedEvent.photos?.length || 0})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {resolvedEvent.photos && resolvedEvent.photos.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            {resolvedEvent.photos.slice(0, 4).map((photo: any, index: number) => (
+                              <div key={photo.id} className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+                                <img 
+                                  src={photo.thumbnailUrl || photo.url} 
+                                  alt="รูปภาพกิจกรรม" 
+                                  className="w-full h-full object-cover" 
+                                />
+                                {index === 3 && resolvedEvent.photos.length > 4 && (
+                                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                    <span className="text-white text-lg font-bold">
+                                      +{resolvedEvent.photos.length - 4}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                             ))}
-                        </div>
-                    ) : (
-                        <div className="text-muted-foreground italic">ยังไม่มีรูปภาพ เป็นคนแรกที่อัปโหลด!</div>
-                    )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                            <p className="text-sm">ยังไม่มีรูปภาพ</p>
+                            <p className="text-xs">เป็นคนแรกที่อัปโหลด!</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               </div>
