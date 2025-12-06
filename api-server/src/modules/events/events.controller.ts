@@ -13,8 +13,14 @@ export class EventsController {
   }
 
   @Get()
-  findAll(@Query('search') search?: string, @Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
-    return this.eventsService.findAll(search, startDate, endDate);
+  findAll(
+    @Query('search') search?: string, 
+    @Query('startDate') startDate?: string, 
+    @Query('endDate') endDate?: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.eventsService.findAll(search, startDate, endDate, Number(page), Number(limit));
   }
 
   @Get('locations')

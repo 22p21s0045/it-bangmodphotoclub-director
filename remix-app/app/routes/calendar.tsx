@@ -31,11 +31,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const res = await axios.get(`${backendUrl}/events`, {
       params: { 
         startDate: startOfWeek(start).toISOString(), 
-        endDate: endOfWeek(end).toISOString() 
+        endDate: endOfWeek(end).toISOString(),
+        limit: 100 // Fetch up to 100 events for the calendar view
       }
     });
-    return json({ events: res.data, currentDate: date.toISOString() });
+    // Handle new API response structure { data: Event[], meta: Meta }
+    const eventsData = res.data.data || [];
+    return json({ events: eventsData, currentDate: date.toISOString() });
   } catch (error) {
+    console.error("Calendar loader error:", error);
     return json({ events: [], currentDate: date.toISOString() });
   }
 }

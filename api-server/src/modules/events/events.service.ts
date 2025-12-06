@@ -21,7 +21,7 @@ export class EventsService {
     return this.prisma.event.create({ data: eventData });
   }
 
-  async findAll(search?: string, startDate?: string, endDate?: string) {
+  async findAll(search?: string, startDate?: string, endDate?: string, page: number = 1, limit: number = 10) {
     const where: Prisma.EventWhereInput = {};
 
     if (search) {
@@ -30,13 +30,14 @@ export class EventsService {
         { description: { contains: search, mode: 'insensitive' } },
       ];
     }
+    
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+    
+    // Get total count for pagination metadata
+    const total = await this.prisma.event.count({ where });
 
-    
-    // Re-implementing date filtering is out of scope for just "refactor types", 
-    // but I can't leave broken code.
-    // I'll just keep the search filter which is correct.
-    
-    return this.prisma.event.findMany({
+    const data = await this.prisma.event.findMany({
       where,
       include: {
         photos: true,
@@ -55,7 +56,19 @@ export class EventsService {
       orderBy: {
         createdAt: 'desc',
       },
+      skip,
+      take: limit,
     });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      }
+    };
   }
 
   async findOne(id: string) {
