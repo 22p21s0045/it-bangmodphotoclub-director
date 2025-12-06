@@ -217,7 +217,8 @@ export class EventsService {
       throw new NotFoundException('User is not joined to this event');
     }
 
-    return this.prisma.joinEvent.delete({
+    // Delete the join record
+    await this.prisma.joinEvent.delete({
       where: {
         userId_eventId: {
           userId,
@@ -225,6 +226,33 @@ export class EventsService {
         },
       },
     });
+
+    // Check if we need to revert event status
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: { joins: true },
+    });
+
+    if (event) {
+      const remainingParticipants = event.joins.length;
+      const isUnlimitedEvent = event.joinLimit === 0;
+      const isLimitedEvent = event.joinLimit > 0;
+      const isBelowLimit = isLimitedEvent && remainingParticipants < event.joinLimit;
+
+      // For unlimited events: if no participants left, revert to UPCOMING
+      // For limited events: if below limit and status is PENDING_RAW, revert to UPCOMING
+      if (event.status === EventStatus.PENDING_RAW) {
+        if ((isUnlimitedEvent && remainingParticipants === 0) || 
+            (isBelowLimit)) {
+          await this.prisma.event.update({
+            where: { id: eventId },
+            data: { status: EventStatus.UPCOMING },
+          });
+        }
+      }
+    }
+
+    return { success: true };
   }
 
   async getLocations() {
