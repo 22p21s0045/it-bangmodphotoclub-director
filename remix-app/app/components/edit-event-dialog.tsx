@@ -30,11 +30,18 @@ type ActionData = {
 
 interface EditEventDialogProps {
   event: any;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: React.ReactNode;
 }
 
-export function EditEventDialog({ event }: EditEventDialogProps) {
+export function EditEventDialog({ event, open: controlledOpen, onOpenChange: controlledOnOpenChange, trigger }: EditEventDialogProps) {
   const fetcher = useFetcher<ActionData>();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = isControlled ? controlledOnOpenChange! : setUncontrolledOpen;
   
   const [eventDates, setEventDates] = useState<Date[]>(
     event.eventDates ? event.eventDates.map((d: string) => new Date(d)) : []
@@ -45,12 +52,20 @@ export function EditEventDialog({ event }: EditEventDialogProps) {
 
   const isSubmitting = fetcher.state === "submitting";
 
+  // Reset state when dialog opens
+  useEffect(() => {
+    if (open) {
+      setEventDates(event.eventDates ? event.eventDates.map((d: string) => new Date(d)) : []);
+      setSubmissionDeadline(event.submissionDeadline ? new Date(event.submissionDeadline) : undefined);
+    }
+  }, [open, event]);
+
   // Close dialog on successful submission
   useEffect(() => {
     if (fetcher.data?.success) {
       setOpen(false);
     }
-  }, [fetcher.data]);
+  }, [fetcher.data, setOpen]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -77,11 +92,15 @@ export function EditEventDialog({ event }: EditEventDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-black text-white hover:bg-black/80" size="sm">
-          <Pencil className="w-4 h-4 mr-1" /> แก้ไข
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button className="bg-black text-white hover:bg-black/80" size="sm">
+              <Pencil className="w-4 h-4 mr-1" /> แก้ไข
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">แก้ไขกิจกรรม</DialogTitle>

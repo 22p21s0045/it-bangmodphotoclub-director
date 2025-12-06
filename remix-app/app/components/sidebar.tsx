@@ -31,14 +31,14 @@ export function Sidebar() {
   return (
     <div
       className={cn(
-        "relative flex h-full flex-col border-r bg-background transition-all duration-300",
-        isCollapsed ? "w-16" : "w-64"
+        "relative flex h-full flex-col bg-background transition-all duration-300",
+        isCollapsed ? "w-16" : "w-56"
       )}
     >
-      <div className="flex items-center justify-between p-4">
+      <div className="flex items-center justify-between p-4 pb-2">
         {!isCollapsed && (
           <div className="flex items-center gap-2 px-2">
-            <img src="/logo.svg" alt="Logo" className="h-28 w-auto" />
+            <img src="/logo.svg" alt="Logo" className="h-10 w-auto" />
           </div>
         )}
         <Button
