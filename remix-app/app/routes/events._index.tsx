@@ -122,9 +122,9 @@ export default function Events() {
   }, [searchValue, startDateValue, endDateValue, submit, search, startDate, endDate]);
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-8">
-      <div className="container mx-auto p-4 space-y-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="h-full flex flex-col bg-gray-50/50 overflow-hidden">
+      <div className="container mx-auto p-4 flex flex-col flex-1 min-h-0 space-y-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 flex-shrink-0">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">กิจกรรม</h1>
             <p className="text-muted-foreground mt-1">จัดการและดูรายการกิจกรรมทั้งหมดของคุณ</p>
@@ -134,8 +134,8 @@ export default function Events() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <Card className="border-none shadow-sm bg-white">
+        <div className="flex flex-col flex-1 min-h-0 space-y-4">
+          <Card className="border-none shadow-sm bg-white flex-shrink-0">
             <CardContent className="pt-6">
                 <div className="flex flex-col md:flex-row gap-4 items-end">
                   <div className="flex-1 w-full space-y-2">
@@ -171,7 +171,7 @@ export default function Events() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm bg-white overflow-hidden">
+          <Card className="border-none shadow-sm bg-white overflow-hidden flex-1 min-h-0 flex flex-col">
             <Suspense fallback={<div className="p-6"><EventListSkeleton /></div>}>
               <Await resolve={eventsResponse}>
                 {(resolvedData) => {
@@ -179,23 +179,23 @@ export default function Events() {
                   const meta = resolvedData.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
 
                   return (
-                    <div className="space-y-4">
+                    <div className="flex flex-col flex-1 min-h-0">
                       {events.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground">
                             ไม่พบกิจกรรม
                         </div>
                       ) : (
-                        <div className="rounded-none border-0">
+                        <div className="flex-1 min-h-0 overflow-y-auto relative">
                           <Table>
-                            <TableHeader className="bg-gray-50/50">
+                            <TableHeader className="bg-gray-100 sticky top-0 z-10 shadow-sm">
                               <TableRow>
-                                <TableHead className="py-4">ชื่องาน</TableHead>
-                                <TableHead className="py-4">วันที่จัดงาน</TableHead>
-                                <TableHead className="py-4">สถานที่</TableHead>
-                                <TableHead className="py-4">จำนวนที่ต้องการ</TableHead>
-                                <TableHead className="py-4">สถานะ</TableHead>
-                                <TableHead className="py-4">ผู้รับผิดชอบ</TableHead>
-                                <TableHead className="text-right py-4">จัดการ</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900">ชื่องาน</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900">วันที่จัดงาน</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900">สถานที่</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900">จำนวนที่ต้องการ</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900">สถานะ</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900">ผู้รับผิดชอบ</TableHead>
+                                <TableHead className="text-right py-4 font-semibold text-gray-900">จัดการ</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -323,7 +323,7 @@ export default function Events() {
                       )}
 
                       {/* Pagination Controls */}
-                      <div className="flex items-center justify-between px-2 py-4 border-t">
+                      <div className="flex items-center justify-between px-2 py-4 border-t flex-shrink-0">
                         <div className="flex-1 text-sm text-muted-foreground">
                           แสดง {(meta.page - 1) * meta.limit + 1} ถึง {Math.min(meta.page * meta.limit, meta.total)} จาก {meta.total} รายการ
                         </div>
