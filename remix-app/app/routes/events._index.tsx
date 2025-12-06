@@ -280,7 +280,8 @@ export default function Events() {
                                 {events.map((event: any) => (
                                   <TableRow 
                                     key={event.id}
-                                    className="hover:bg-muted/50 transition-colors"
+                                    className="hover:bg-muted/50 transition-colors cursor-pointer"
+                                    onClick={() => window.location.href = `/events/${event.id}`}
                                   >
                                     <TableCell className="font-medium">
                                       <div className="flex flex-col py-1">
@@ -356,7 +357,7 @@ export default function Events() {
                                         )}
                                       </div>
                                     </TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                           <Button variant="ghost" className="h-8 w-8 p-0">
