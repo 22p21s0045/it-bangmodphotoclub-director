@@ -135,7 +135,7 @@ export default function Events() {
         </div>
 
         <div className="flex flex-col flex-1 min-h-0 space-y-4">
-          <Card className="border-none shadow-sm bg-white flex-shrink-0">
+          <Card className="border-none shadow-sm bg-card flex-shrink-0">
             <CardContent className="pt-6">
                 <div className="flex flex-col md:flex-row gap-4 items-end">
                   <div className="flex-1 w-full space-y-2">
@@ -171,7 +171,7 @@ export default function Events() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm bg-white overflow-hidden flex-1 min-h-0 flex flex-col">
+          <Card className="border-none shadow-sm bg-card overflow-hidden flex-1 min-h-0 flex flex-col">
             <Suspense fallback={<div className="p-6"><EventListSkeleton /></div>}>
               <Await resolve={eventsResponse}>
                 {(resolvedData) => {
@@ -196,7 +196,7 @@ export default function Events() {
                                 <Link 
                                   key={event.id} 
                                   to={`/events/${event.id}`}
-                                  className="block bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                                  className="block bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
                                 >
                                   <div className="flex justify-between items-start gap-2">
                                     <div className="flex-1 min-w-0">
