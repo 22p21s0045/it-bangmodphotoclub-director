@@ -32,6 +32,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 import { MoreHorizontal, Eye, Pencil, UserPlus } from "lucide-react";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -343,16 +349,23 @@ export default function Events() {
                                     <TableCell>
                                       <div className="flex -space-x-3 overflow-hidden p-1">
                                         {event.joins && event.joins.length > 0 ? (
-                                          event.joins.map((join: any) => (
-                                            <Avatar 
-                                              key={join.id} 
-                                              className="inline-block h-8 w-8 rounded-full ring-2 ring-white cursor-help"
-                                              title={join.user?.name || "User"}
-                                            >
-                                              <AvatarImage src={join.user?.avatar} />
-                                              <AvatarFallback>{join.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-                                            </Avatar>
-                                          ))
+                                          <TooltipProvider delayDuration={0}>
+                                            {event.joins.map((join: any) => (
+                                              <Tooltip key={join.id}>
+                                                <TooltipTrigger asChild>
+                                                  <Avatar 
+                                                    className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-900 cursor-pointer hover:z-10 hover:scale-110 transition-transform"
+                                                  >
+                                                    <AvatarImage src={join.user?.avatar} />
+                                                    <AvatarFallback>{join.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                                                  </Avatar>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  <p>{join.user?.name || "User"}</p>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            ))}
+                                          </TooltipProvider>
                                         ) : (
                                           <span className="text-muted-foreground text-xs">-</span>
                                         )}
