@@ -71,8 +71,8 @@ export function CreateEventDialog() {
         </Button>
       </DialogTrigger>
       <DialogContent className="w-full max-w-[95vw] md:max-w-4xl max-h-[90vh] overflow-y-auto p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gray-50/50">
-          <DialogTitle className="text-2xl font-bold text-gray-900">สร้างกิจกรรมใหม่</DialogTitle>
+        <DialogHeader className="px-6 pt-6 pb-4 border-b bg-muted/50">
+          <DialogTitle className="text-2xl font-bold text-foreground">สร้างกิจกรรมใหม่</DialogTitle>
           <DialogDescription className="text-muted-foreground">
             กรอกข้อมูลกิจกรรมด้านล่างเพื่อสร้างกิจกรรมใหม่
           </DialogDescription>
@@ -82,7 +82,7 @@ export function CreateEventDialog() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Column - Basic Info */}
             <div className="space-y-5">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-3">
                 <Info className="h-4 w-4" />
                 <span>ข้อมูลพื้นฐาน</span>
               </div>
@@ -158,7 +158,7 @@ export function CreateEventDialog() {
 
             {/* Right Column - Dates */}
             <div className="space-y-5">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-3">
                 <CalendarDays className="h-4 w-4" />
                 <span>กำหนดการ</span>
               </div>

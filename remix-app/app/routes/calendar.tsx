@@ -69,32 +69,32 @@ export default function Calendar() {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <Link to="/events" className="inline-flex items-center text-gray-600 hover:text-gray-900">
+        <Link to="/events" className="inline-flex items-center text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to List
         </Link>
         <div className="flex items-center gap-4">
-            <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-full">
+            <button onClick={prevMonth} className="p-2 hover:bg-muted rounded-full">
                 <ChevronLeft className="w-5 h-5" />
             </button>
-            <h2 className="text-2xl font-bold text-gray-900 w-48 text-center">
+            <h2 className="text-2xl font-bold text-foreground w-48 text-center">
                 {format(date, "MMMM yyyy")}
             </h2>
-            <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-full">
+            <button onClick={nextMonth} className="p-2 hover:bg-muted rounded-full">
                 <ChevronRight className="w-5 h-5" />
             </button>
         </div>
         <div className="w-24"></div> {/* Spacer for centering */}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="grid grid-cols-7 border-b bg-gray-50">
+      <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+        <div className="grid grid-cols-7 border-b bg-muted">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="py-3 text-center text-sm font-semibold text-gray-600">
+                <div key={day} className="py-3 text-center text-sm font-semibold text-muted-foreground">
                     {day}
                 </div>
             ))}
         </div>
-        <div className="grid grid-cols-7 auto-rows-fr bg-gray-200 gap-px">
+        <div className="grid grid-cols-7 auto-rows-fr bg-border gap-px">
             {days.map((day, dayIdx) => {
                 const dayEvents = events.filter((event: any) => 
                     event.eventDates && event.eventDates.some((dateStr: string) => isSameDay(new Date(dateStr), day))
@@ -103,8 +103,8 @@ export default function Calendar() {
                 return (
                     <div 
                         key={day.toString()} 
-                        className={`min-h-[120px] bg-white p-2 ${
-                            !isSameMonth(day, monthStart) ? "bg-gray-50 text-gray-400" : ""
+                        className={`min-h-[120px] bg-card p-2 ${
+                            !isSameMonth(day, monthStart) ? "bg-muted/50 text-muted-foreground" : ""
                         }`}
                     >
                         <div className={`text-right text-sm mb-1 ${

@@ -122,11 +122,11 @@ export default function Events() {
   }, [searchValue, startDateValue, endDateValue, submit, search, startDate, endDate]);
 
   return (
-    <div className="h-full flex flex-col bg-gray-50/50 overflow-hidden">
+    <div className="h-full flex flex-col bg-muted/50 overflow-hidden">
       <div className="container mx-auto p-4 flex flex-col flex-1 min-h-0 space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 flex-shrink-0">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">กิจกรรม</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">กิจกรรม</h1>
             <p className="text-muted-foreground mt-1">จัดการและดูรายการกิจกรรมทั้งหมดของคุณ</p>
           </div>
           <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export default function Events() {
                               value={searchValue}
                               onChange={(e) => setSearchValue(e.target.value)}
                               placeholder="ค้นหากิจกรรม..." 
-                              className="pl-9 bg-gray-50/50"
+                              className="pl-9 bg-muted/50"
                           />
                       </div>
                   </div>
@@ -265,22 +265,22 @@ export default function Events() {
                           {/* Desktop Table View */}
                           <div className="hidden md:block flex-1 min-h-0 overflow-auto relative">
                             <table className="w-full caption-bottom text-sm">
-                              <TableHeader className="bg-gray-100">
+                              <TableHeader className="bg-muted">
                                 <TableRow>
-                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">ชื่องาน</TableHead>
-                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">วันที่จัดงาน</TableHead>
-                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">สถานที่</TableHead>
-                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">จำนวนที่ต้องการ</TableHead>
-                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">สถานะ</TableHead>
-                                  <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">ผู้รับผิดชอบ</TableHead>
-                                  <TableHead className="text-right py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">จัดการ</TableHead>
+                                  <TableHead className="py-4 font-semibold text-foreground bg-muted sticky top-0 z-10">ชื่องาน</TableHead>
+                                  <TableHead className="py-4 font-semibold text-foreground bg-muted sticky top-0 z-10">วันที่จัดงาน</TableHead>
+                                  <TableHead className="py-4 font-semibold text-foreground bg-muted sticky top-0 z-10">สถานที่</TableHead>
+                                  <TableHead className="py-4 font-semibold text-foreground bg-muted sticky top-0 z-10">จำนวนที่ต้องการ</TableHead>
+                                  <TableHead className="py-4 font-semibold text-foreground bg-muted sticky top-0 z-10">สถานะ</TableHead>
+                                  <TableHead className="py-4 font-semibold text-foreground bg-muted sticky top-0 z-10">ผู้รับผิดชอบ</TableHead>
+                                  <TableHead className="text-right py-4 font-semibold text-foreground bg-muted sticky top-0 z-10">จัดการ</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
                                 {events.map((event: any) => (
                                   <TableRow 
                                     key={event.id}
-                                    className="hover:bg-gray-50/50 transition-colors"
+                                    className="hover:bg-muted/50 transition-colors"
                                   >
                                     <TableCell className="font-medium">
                                       <div className="flex flex-col py-1">
