@@ -185,17 +185,17 @@ export default function Events() {
                             ไม่พบกิจกรรม
                         </div>
                       ) : (
-                        <div className="flex-1 min-h-0 overflow-y-auto relative">
-                          <Table>
-                            <TableHeader className="bg-gray-100 sticky top-0 z-10 shadow-sm">
+                        <div className="flex-1 min-h-0 overflow-auto relative">
+                          <table className="w-full caption-bottom text-sm">
+                            <TableHeader className="bg-gray-100">
                               <TableRow>
-                                <TableHead className="py-4 font-semibold text-gray-900">ชื่องาน</TableHead>
-                                <TableHead className="py-4 font-semibold text-gray-900">วันที่จัดงาน</TableHead>
-                                <TableHead className="py-4 font-semibold text-gray-900">สถานที่</TableHead>
-                                <TableHead className="py-4 font-semibold text-gray-900">จำนวนที่ต้องการ</TableHead>
-                                <TableHead className="py-4 font-semibold text-gray-900">สถานะ</TableHead>
-                                <TableHead className="py-4 font-semibold text-gray-900">ผู้รับผิดชอบ</TableHead>
-                                <TableHead className="text-right py-4 font-semibold text-gray-900">จัดการ</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">ชื่องาน</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">วันที่จัดงาน</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">สถานที่</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">จำนวนที่ต้องการ</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">สถานะ</TableHead>
+                                <TableHead className="py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">ผู้รับผิดชอบ</TableHead>
+                                <TableHead className="text-right py-4 font-semibold text-gray-900 bg-gray-100 sticky top-0 z-10">จัดการ</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -318,7 +318,7 @@ export default function Events() {
                                 </TableRow>
                               ))}
                             </TableBody>
-                          </Table>
+                          </table>
                         </div>
                       )}
 
