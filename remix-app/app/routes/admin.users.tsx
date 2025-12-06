@@ -230,8 +230,8 @@ export default function AdminUsers() {
                       key={user.id} 
                       className={`
                         ${!user.isActive ? "bg-muted/50" : ""} 
-                        ${user.isActive && index % 2 === 0 ? "bg-gray-100" : "bg-white"}
-                        hover:bg-gray-200 transition-colors
+                        ${user.isActive && index % 2 === 0 ? "bg-muted/30" : "bg-card"}
+                        hover:bg-muted transition-colors
                       `}
                     >
                       <TableCell>
@@ -258,7 +258,7 @@ export default function AdminUsers() {
                       </TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.role === "ADMIN" ? "bg-purple-100 text-purple-800" : "bg-green-100 text-green-800"
+                          user.role === "ADMIN" ? "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300" : "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
                         }`}>
                           {user.role === "ADMIN" ? "ผู้ดูแลระบบ" : "สมาชิก"}
                         </span>
@@ -276,14 +276,14 @@ export default function AdminUsers() {
                               <DropdownMenuLabel>การจัดการ</DropdownMenuLabel>
                               <DropdownMenuItem 
                                 onClick={() => handleRoleChange(user)} 
-                                className="cursor-pointer hover:!bg-gray-200 transition-colors"
+                                className="cursor-pointer hover:bg-accent transition-colors"
                               >
                                 <UserCog className="mr-2 h-4 w-4" />
                                 เปลี่ยนบทบาท
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => handleToggleStatus(user)} 
-                                className="cursor-pointer hover:!bg-gray-200 transition-colors"
+                                className="cursor-pointer hover:bg-accent transition-colors"
                               >
                                 {user.isActive ? (
                                   <>
@@ -299,7 +299,7 @@ export default function AdminUsers() {
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
-                                className="text-red-600 focus:text-red-600 cursor-pointer hover:!bg-gray-200 transition-colors"
+                                className="text-red-600 focus:text-red-600 cursor-pointer hover:bg-accent transition-colors"
                                 onClick={() => handleDelete(user)}
                               >
                                 <Trash className="mr-2 h-4 w-4" />
