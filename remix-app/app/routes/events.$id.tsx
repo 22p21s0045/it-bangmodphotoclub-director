@@ -58,6 +58,15 @@ export async function action({ request, params }: ActionFunctionArgs) {
   return json({ success: true });
 }
 
+function formatBytes(bytes: number, decimals = 2) {
+  if (!+bytes) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
 export default function EventDetail() {
   const { event, user } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
@@ -284,7 +293,12 @@ export default function EventDetail() {
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <ImageIcon className="w-5 h-5 text-primary" />
-                        รูปภาพ ({resolvedEvent.photos?.length || 0})
+                        <span>รูปภาพ ({resolvedEvent.photos?.length || 0})</span>
+                        {resolvedEvent.photos && resolvedEvent.photos.length > 0 && (
+                          <span className="text-sm font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                            {formatBytes(resolvedEvent.photos.reduce((acc: number, p: Photo) => acc + (p.size || 0), 0))}
+                          </span>
+                        )}
                       </CardTitle>
                       <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
                         <Upload className="w-4 h-4 mr-2" />
