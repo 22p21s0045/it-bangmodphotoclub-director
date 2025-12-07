@@ -1,11 +1,13 @@
 import { json, LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useFetcher } from "@remix-run/react";
-import { Target, Check, Star, Zap } from "lucide-react";
+import { Target, Check, Star, Zap, Info, X } from "lucide-react";
+import { useState } from "react";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { PageTransition } from "~/components/page-transition";
 import { sessionStorage } from "~/session.server";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
 
 interface RankInfo {
   name: string;
@@ -78,29 +80,112 @@ export default function MissionsPage() {
   const fetcher = useFetcher();
 
   const completedCount = missions.filter(m => m.completed).length;
+  const [showRankInfo, setShowRankInfo] = useState(false);
+
+  const allRanks = [
+    { name: 'Rookie', minExp: 0, maxExp: 99, image: '/images/ranks/rookie.svg', description: 'เริ่มต้น สมาชิกใหม่ทุกคน', auraColor: 'rgba(156, 163, 175, 0.5)', glowColor: '#9CA3AF' },
+    { name: 'Intermediate', minExp: 100, maxExp: 299, image: '/images/ranks/intermediate.svg', description: 'สมาชิกที่มีประสบการณ์พอสมควร', auraColor: 'rgba(34, 197, 94, 0.5)', glowColor: '#22C55E' },
+    { name: 'Master', minExp: 300, maxExp: 599, image: '/images/ranks/master.svg', description: 'สมาชิกที่เชี่ยวชาญและ Active', auraColor: 'rgba(168, 85, 247, 0.5)', glowColor: '#A855F7' },
+    { name: 'Grand Master', minExp: 600, maxExp: Infinity, image: '/images/ranks/grand-master.svg', description: 'สมาชิกระดับสูงสุด ขาประจำชมรม', auraColor: 'rgba(251, 191, 36, 0.6)', glowColor: '#FBBF24' },
+  ];
+
+  // Get current rank aura
+  const currentRankAura = allRanks.find(r => r.name === userRank.rank.name);
 
   return (
     <PageTransition className="min-h-screen bg-muted/30 p-6">
       <div className="container mx-auto max-w-4xl">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-            <Target className="w-8 h-8 text-primary" />
-            ภารกิจ
-          </h1>
-          <p className="text-muted-foreground">ทำภารกิจเพื่อรับ EXP และเลื่อน Rank</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+              <Target className="w-8 h-8 text-primary" />
+              ภารกิจ
+            </h1>
+            <p className="text-muted-foreground">ทำภารกิจเพื่อรับ EXP และเลื่อน Rank</p>
+          </div>
+          <button
+            onClick={() => setShowRankInfo(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Info className="w-4 h-4" />
+            ดู Rank ทั้งหมด
+          </button>
         </div>
+
+        {/* Rank Info Dialog */}
+        <Dialog open={showRankInfo} onOpenChange={setShowRankInfo}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-500" />
+                ระบบ Rank
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              {allRanks.map((rank, index) => (
+                <div 
+                  key={rank.name}
+                  className={`flex items-center gap-4 p-4 rounded-lg border ${
+                    userRank.rank.name === rank.name 
+                      ? 'bg-primary/10 border-primary' 
+                      : 'bg-card border-border'
+                  }`}
+                >
+                  <div 
+                    className="w-16 h-16 flex-shrink-0 relative"
+                    style={{
+                      filter: `drop-shadow(0 0 8px ${rank.glowColor}) drop-shadow(0 0 16px ${rank.auraColor})`,
+                    }}
+                  >
+                    <div 
+                      className="absolute inset-0 rounded-full opacity-30"
+                      style={{ backgroundColor: rank.auraColor }}
+                    />
+                    <img src={rank.image} alt={rank.name} className="w-full h-full object-contain relative z-10" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-lg">{rank.name}</h3>
+                      {userRank.rank.name === rank.name && (
+                        <Badge variant="default" className="text-xs">ปัจจุบัน</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{rank.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      EXP: {rank.minExp} - {rank.maxExp === Infinity ? '∞' : rank.maxExp}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Rank Card */}
         <Card className="mb-6 overflow-hidden">
           <div className="bg-gradient-to-r from-primary/20 to-primary/5 p-6">
             <div className="flex items-center gap-6">
-              {/* Rank Image */}
-              <div className="w-24 h-24 flex-shrink-0">
+              {/* Rank Image with Aura */}
+              <div 
+                className="w-28 h-28 flex-shrink-0 relative"
+                style={{
+                  filter: currentRankAura 
+                    ? `drop-shadow(0 0 12px ${currentRankAura.glowColor}) drop-shadow(0 0 24px ${currentRankAura.auraColor}) drop-shadow(0 0 36px ${currentRankAura.auraColor})`
+                    : undefined,
+                }}
+              >
+                <div 
+                  className="absolute inset-0 rounded-full"
+                  style={{ 
+                    backgroundColor: currentRankAura?.auraColor,
+                    opacity: 0.3,
+                  }}
+                />
                 <img 
                   src={userRank.rank.image} 
                   alt={userRank.rank.name}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain relative z-10"
                 />
               </div>
               
