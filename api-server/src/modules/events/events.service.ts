@@ -3,6 +3,7 @@ import { PrismaClient, Prisma, EventStatus } from '@prisma/client';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { MinioService } from '../minio/minio.service';
+import * as archiver from 'archiver';
 
 @Injectable()
 export class EventsService {
@@ -335,5 +336,65 @@ export class EventsService {
     // Extract path from full URL like http://localhost:9000/photos/photos/eventId/userId/filename
     const match = url.match(/\/photos\/(.+)$/);
     return match ? match[1] : null;
+  }
+
+  async downloadPhotosAsZip(id: string, res: any): Promise<void> {
+    try {
+      const event = await this.prisma.event.findUnique({
+        where: { id },
+        include: { photos: true },
+      });
+
+      if (!event) {
+        throw new NotFoundException(`ไม่พบกิจกรรม ID: ${id}`);
+      }
+
+      if (!event.photos || event.photos.length === 0) {
+        throw new BadRequestException('ไม่มีรูปภาพในกิจกรรมนี้');
+      }
+
+      // Create archive
+      const archive = archiver('zip', { zlib: { level: 5 } });
+
+      // Handle archive errors
+      archive.on('error', (err: Error) => {
+        console.error('Archive error:', err);
+        throw err;
+      });
+
+      // Set response headers
+      const safeTitle = event.title.replace(/[^a-zA-Z0-9ก-๙]/g, '_');
+      res.set({
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="${safeTitle}_photos.zip"`,
+      });
+
+      // Pipe archive to response
+      archive.pipe(res);
+
+      // Add each photo to the archive
+      for (const photo of event.photos) {
+        try {
+          const photoPath = this.extractPathFromUrl(photo.url);
+          console.log(`Processing photo: ${photo.filename}, URL: ${photo.url}, Path: ${photoPath}`);
+          
+          if (photoPath) {
+            const stream = await this.minioService.getObject(photoPath);
+            archive.append(stream as any, { name: photo.filename });
+          } else {
+            console.warn(`Could not extract path from URL: ${photo.url}`);
+          }
+        } catch (error) {
+          console.error(`Error adding photo ${photo.filename} to archive:`, error);
+          // Continue with other photos
+        }
+      }
+
+      // Finalize the archive
+      await archive.finalize();
+    } catch (error) {
+      console.error('Error in downloadPhotosAsZip:', error);
+      throw error;
+    }
   }
 }

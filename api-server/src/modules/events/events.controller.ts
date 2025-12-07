@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -54,5 +55,10 @@ export class EventsController {
     @Body() body: { userId: string; role: string }
   ) {
     return this.eventsService.delete(id, body.userId, body.role);
+  }
+
+  @Get(':id/photos/download')
+  async downloadPhotos(@Param('id') id: string, @Res() res: Response) {
+    return this.eventsService.downloadPhotosAsZip(id, res);
   }
 }

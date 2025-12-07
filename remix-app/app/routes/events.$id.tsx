@@ -7,7 +7,7 @@ import { EventDetailSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
@@ -318,6 +318,20 @@ export default function EventDetail() {
                         <Upload className="w-4 h-4 mr-2" />
                         อัปโหลดไฟล์ RAW
                       </Button>
+                      {resolvedEvent.photos && resolvedEvent.photos.length > 0 && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const backendUrl = window.ENV?.BACKEND_URL || 'http://localhost:3000';
+                            window.open(`${backendUrl}/events/${resolvedEvent.id}/photos/download`, '_blank');
+                          }}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          ดาวน์โหลด ZIP
+                        </Button>
+                      )}
                     </div>
                   </CardHeader>
                   
