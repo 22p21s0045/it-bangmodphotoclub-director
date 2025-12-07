@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "~/components/ui/dialog";
 import { RAW_EXTENSIONS, isRawFile } from "~/lib/raw-extensions";
 
@@ -123,7 +124,8 @@ export default function UploadPage() {
     <div className="min-h-screen bg-muted/30">
       {/* Upload Progress Modal */}
       <Dialog open={showModal} onOpenChange={(open) => {
-        if (!open && (uploadStatus === "success" || uploadStatus === "error")) {
+        // Only allow closing if upload is complete (success or error)
+        if (!open && !uploading && (uploadStatus === "success" || uploadStatus === "error")) {
           handleCloseModal();
         }
       }}>
@@ -132,6 +134,13 @@ export default function UploadPage() {
             <DialogTitle className="text-center">
               {uploadStatus === "success" ? "อัปโหลดสำเร็จ" : uploadStatus === "error" ? "เกิดข้อผิดพลาด" : "กำลังอัปโหลด"}
             </DialogTitle>
+            <DialogDescription className="text-center">
+              {uploadStatus === "success" 
+                ? "ไฟล์ของคุณถูกอัปโหลดเรียบร้อยแล้ว" 
+                : uploadStatus === "error"
+                ? "กรุณาลองอีกครั้ง"
+                : "กรุณารอสักครู่..."}
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center py-6 space-y-6">
             {/* Status Icon */}

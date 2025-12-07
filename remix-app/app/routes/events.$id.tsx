@@ -1,17 +1,18 @@
 import { json, defer, LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
-import { useLoaderData, Link, useFetcher, Await } from "@remix-run/react";
+import { useLoaderData, Link, useFetcher, Await, useNavigate, useRevalidator } from "@remix-run/react";
 import type { JoinEvent, Photo } from "~/types";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { EventDetailSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, ImageIcon, FileText, Upload } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
 import { LeaveEventDialog } from "~/components/leave-event-dialog";
 import { RemoveUserDialog } from "~/components/remove-user-dialog";
+import { UploadRawDialog } from "~/components/upload-raw-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { EventStatusStepper } from "~/components/event-status-stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -47,7 +48,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
 export default function EventDetail() {
   const { event, user } = useLoaderData<typeof loader>();
-  const fetcher = useFetcher();
+  const navigate = useNavigate();
+  const revalidator = useRevalidator();
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -114,7 +117,7 @@ export default function EventDetail() {
                               <LeaveEventDialog 
                                 eventId={resolvedEvent.id} 
                                 userId={user.id} 
-                                isUserJoined={isUserJoined} 
+                                isUserJoined={isUserJoined}
                               />
                             )}
                             <EditEventDialog event={resolvedEvent} />
@@ -254,11 +257,9 @@ export default function EventDetail() {
                         <ImageIcon className="w-5 h-5 text-primary" />
                         รูปภาพ ({resolvedEvent.photos?.length || 0})
                       </CardTitle>
-                      <Button asChild size="sm">
-                        <Link to={`/events/${resolvedEvent.id}/upload`}>
-                          <Upload className="w-4 h-4 mr-2" />
-                          อัปโหลดไฟล์ RAW
-                        </Link>
+                      <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
+                        <Upload className="w-4 h-4 mr-2" />
+                        อัปโหลดไฟล์ RAW
                       </Button>
                     </div>
                   </CardHeader>
@@ -268,25 +269,31 @@ export default function EventDetail() {
                         {resolvedEvent.photos.map((photo: Photo) => (
                           <div 
                             key={photo.id} 
-                            className="flex-shrink-0 w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 bg-muted rounded-lg overflow-hidden"
+                            className="relative flex-none w-48 aspect-[3/2] rounded-md overflow-hidden border shadow-sm group"
                           >
                             <img 
-                              src={photo.thumbnailUrl || photo.url} 
-                              alt="รูปภาพกิจกรรม" 
-                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" 
+                              src={`http://localhost:9000/photos/${photo.url}`} 
+                              alt={photo.filename} 
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
                             />
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <ImageIcon className="w-16 h-16 mx-auto mb-3 opacity-20" />
-                        <p className="text-base">ยังไม่มีรูปภาพ</p>
-                        <p className="text-sm">เป็นคนแรกที่อัปโหลด!</p>
+                      <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg border border-dashed">
+                        <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                        <p>ยังไม่มีรูปภาพในกิจกรรมนี้</p>
                       </div>
                     )}
                   </CardContent>
                 </Card>
+                {/* Upload Dialog */}
+                <UploadRawDialog
+                  eventId={resolvedEvent.id}
+                  open={uploadDialogOpen}
+                  onOpenChange={setUploadDialogOpen}
+                  onSuccess={() => revalidator.revalidate()}
+                />
               </div>
             );
           }}
