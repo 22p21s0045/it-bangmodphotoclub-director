@@ -55,6 +55,9 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      height: {
+        "25": "6.25rem",
+      },
       keyframes: {
         shimmer: {
           "100%": {

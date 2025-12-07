@@ -1,8 +1,9 @@
 import { Link, useLocation, useRouteLoaderData } from "@remix-run/react";
 import { Calendar, ChevronLeft, ChevronRight, Home, List, Users } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { User } from "~/types";
 import { cn } from "~/lib/utils";
+import { useTheme } from "~/store/useTheme";
 import { Button } from "./ui/button";
 
 const sidebarItems = [
@@ -28,6 +29,12 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const data = useRouteLoaderData("root") as { user: User | null };
   const user = data?.user;
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div
@@ -39,7 +46,11 @@ export function Sidebar() {
       <div className="flex items-center justify-between p-4 pb-2">
         {!isCollapsed && (
           <div className="flex items-center gap-2 px-2">
-            <img src="/logo.svg" alt="Logo" className="h-10 w-auto" />
+            <img 
+              src={mounted && theme === 'dark' ? "/logo-dark.svg" : "/logo.svg"} 
+              alt="Logo" 
+              className="h-25 w-auto" 
+            />
           </div>
         )}
         <Button
