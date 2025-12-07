@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete } from '@nestjs/common';
 import { PhotosService } from './photos.service';
 import { CreatePhotoDto } from './dto/create-photo.dto';
 
@@ -19,5 +19,13 @@ export class PhotosController {
   @Get()
   async findAll() {
     return this.photosService.findAll();
+  }
+
+  @Delete(':id')
+  async delete(
+    @Param('id') id: string,
+    @Body() body: { userId: string; role: string }
+  ) {
+    return this.photosService.delete(id, body.userId, body.role);
   }
 }

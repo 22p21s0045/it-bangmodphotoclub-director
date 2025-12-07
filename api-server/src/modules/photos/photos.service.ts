@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { MinioService } from '../minio/minio.service';
 import { PrismaClient } from '@prisma/client';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -86,5 +86,45 @@ export class PhotosService {
 
   async findAll() {
     return this.prisma.photo.findMany();
+  }
+
+  async delete(id: string, userId: string, role: string) {
+    const photo = await this.prisma.photo.findUnique({
+      where: { id },
+      include: { event: { include: { joins: true } } },
+    });
+
+    if (!photo) {
+      throw new NotFoundException(`ไม่พบรูปภาพ ID: ${id}`);
+    }
+
+    // Check authorization: Admin or event participant can delete
+    const isAdmin = role === 'ADMIN';
+    const isEventParticipant = photo.event?.joins?.some(j => j.userId === userId);
+    const isUploader = photo.userId === userId;
+
+    if (!isAdmin && !isEventParticipant && !isUploader) {
+      throw new ForbiddenException('คุณไม่มีสิทธิ์ลบรูปภาพนี้');
+    }
+
+    // Delete from MinIO
+    try {
+      const photoPath = this.extractPathFromUrl(photo.url);
+      await this.minioService.deleteObject(photoPath);
+      
+      // Also delete thumbnail if exists
+      if (photo.thumbnailUrl) {
+        const thumbnailPath = this.extractPathFromUrl(photo.thumbnailUrl);
+        await this.minioService.deleteObject(thumbnailPath);
+      }
+    } catch (error) {
+      this.logger.warn(`Could not delete photo from storage: ${error}`);
+    }
+
+    // Delete from database
+    await this.prisma.photo.delete({ where: { id } });
+
+    this.logger.log(`Photo ${id} deleted by user ${userId}`);
+    return { message: 'ลบรูปภาพสำเร็จ' };
   }
 }

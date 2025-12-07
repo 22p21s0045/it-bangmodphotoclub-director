@@ -7,7 +7,7 @@ import { EventDetailSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download, Palette } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download, Palette, Trash2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
@@ -15,6 +15,7 @@ import { LeaveEventDialog } from "~/components/leave-event-dialog";
 import { RemoveUserDialog } from "~/components/remove-user-dialog";
 import { UploadRawDialog } from "~/components/upload-raw-dialog";
 import { UploadEditedDialog } from "~/components/upload-edited-dialog";
+import { DeletePhotoDialog } from "~/components/delete-photo-dialog";
 import { PhotoPreviewDialog } from "~/components/photo-preview-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { EventStatusStepper } from "~/components/event-status-stepper";
@@ -78,6 +79,7 @@ export default function EventDetail() {
   const [uploadEditedDialogOpen, setUploadEditedDialogOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [activeGalleryTab, setActiveGalleryTab] = useState<'RAW' | 'EDITED'>('RAW');
+  const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
 
   return (
     <PageTransition className="min-h-screen bg-muted/30">
@@ -433,6 +435,20 @@ export default function EventDetail() {
                                         </Badge>
                                       </div>
                                     )}
+                                    {/* Delete button - visible on hover for Admin/Participant */}
+                                    {(user?.role === 'ADMIN' || resolvedEvent.joins?.some((j: JoinEvent) => j.userId === user?.id)) && (
+                                      <Button
+                                        size="icon"
+                                        variant="destructive"
+                                        className="absolute top-1 left-1 w-7 h-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setPhotoToDelete(photo);
+                                        }}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -497,6 +513,21 @@ export default function EventDetail() {
                   open={!!selectedPhoto}
                   onOpenChange={(open) => !open && setSelectedPhoto(null)}
                   onPhotoChange={setSelectedPhoto}
+                />
+                
+                {/* Delete Photo Dialog */}
+                <DeletePhotoDialog
+                  photo={photoToDelete}
+                  open={!!photoToDelete}
+                  onOpenChange={(open) => !open && setPhotoToDelete(null)}
+                  onConfirm={async () => {
+                    if (photoToDelete) {
+                      await axios.delete(`http://localhost:3000/photos/${photoToDelete.id}`, {
+                        data: { userId: user?.id, role: user?.role }
+                      });
+                      revalidator.revalidate();
+                    }
+                  }}
                 />
               </div>
             );
