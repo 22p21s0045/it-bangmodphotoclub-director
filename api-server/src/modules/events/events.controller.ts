@@ -74,4 +74,13 @@ export class EventsController {
   ) {
     return this.eventsService.downloadPhotosAsZip(id, res, type);
   }
+
+  @Get(':id/participants/export')
+  async exportParticipants(
+    @Param('id') id: string,
+    @Res() res: Response
+  ) {
+    return this.eventsService.exportParticipantsToExcel(id, res);
+  }
 }
+

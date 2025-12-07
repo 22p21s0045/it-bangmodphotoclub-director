@@ -7,7 +7,7 @@ import { EventDetailSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download, Palette, Trash2, CheckSquare, Square, X, CalendarPlus, ExternalLink } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download, Palette, Trash2, CheckSquare, Square, X, CalendarPlus, ExternalLink, FileSpreadsheet } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
@@ -212,13 +212,28 @@ export default function EventDetail() {
                             <Users className="w-5 h-5 text-primary" />
                             ผู้รับผิดชอบ ({participantCount} คน)
                           </CardTitle>
-                          {user?.role === "ADMIN" && (
-                            <AssignUserDialog 
-                              eventId={resolvedEvent.id} 
-                              joinedUserIds={resolvedEvent.joins?.map((j: JoinEvent) => j.userId) || []}
-                              onAssign={() => {}}
-                            />
-                          )}
+                          <div className="flex gap-2">
+                            {user?.role === "ADMIN" && participantCount > 0 && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const backendUrl = window.ENV?.BACKEND_URL || 'http://localhost:3000';
+                                  window.open(`${backendUrl}/events/${resolvedEvent.id}/participants/export`, '_blank');
+                                }}
+                              >
+                                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                                Export Excel
+                              </Button>
+                            )}
+                            {user?.role === "ADMIN" && (
+                              <AssignUserDialog 
+                                eventId={resolvedEvent.id} 
+                                joinedUserIds={resolvedEvent.joins?.map((j: JoinEvent) => j.userId) || []}
+                                onAssign={() => {}}
+                              />
+                            )}
+                          </div>
                         </div>
                       </CardHeader>
                       <CardContent>

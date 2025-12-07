@@ -5,6 +5,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { MinioService } from '../minio/minio.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import * as archiver from 'archiver';
+import * as ExcelJS from 'exceljs';
 
 @Injectable()
 export class EventsService {
@@ -425,5 +426,88 @@ export class EventsService {
       console.error('Error in downloadPhotosAsZip:', error);
       throw error;
     }
+  }
+
+  async exportParticipantsToExcel(id: string, res: any): Promise<void> {
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      include: {
+        joins: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                studentId: true,
+              }
+            }
+          },
+          orderBy: {
+            joinedAt: 'asc'
+          }
+        }
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException(`ไม่พบกิจกรรม ID: ${id}`);
+    }
+
+    // Create workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('รายชื่อผู้เข้าร่วม');
+
+    // Set column headers with Thai labels
+    worksheet.columns = [
+      { header: 'ลำดับ', key: 'index', width: 8 },
+      { header: 'ชื่อ-นามสกุล', key: 'name', width: 25 },
+      { header: 'อีเมล', key: 'email', width: 30 },
+      { header: 'รหัสนักศึกษา', key: 'studentId', width: 15 },
+      { header: 'วันที่เข้าร่วม', key: 'joinedAt', width: 20 },
+    ];
+
+    // Style header row
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' }
+    };
+    headerRow.alignment = { horizontal: 'center' };
+
+    // Add participant data
+    event.joins.forEach((join, index) => {
+      worksheet.addRow({
+        index: index + 1,
+        name: join.user?.name || '-',
+        email: join.user?.email || '-',
+        studentId: join.user?.studentId || '-',
+        joinedAt: new Date(join.joinedAt).toLocaleDateString('th-TH', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+      });
+    });
+
+    // Add summary at the bottom
+    worksheet.addRow([]);
+    worksheet.addRow(['', `รวมทั้งหมด: ${event.joins.length} คน`]);
+
+    // Set response headers
+    const safeTitle = event.title.replace(/[^a-zA-Z0-9ก-๙]/g, '_');
+    const dateStr = new Date().toISOString().split('T')[0];
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="${safeTitle}_participants_${dateStr}.xlsx"`,
+    });
+
+    // Write to response
+    await workbook.xlsx.write(res);
+    res.end();
   }
 }
