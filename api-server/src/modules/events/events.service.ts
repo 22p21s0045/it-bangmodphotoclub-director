@@ -1,11 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaClient, Prisma, EventStatus } from '@prisma/client';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { MinioService } from '../minio/minio.service';
 
 @Injectable()
 export class EventsService {
   private prisma = new PrismaClient();
+
+  constructor(private readonly minioService: MinioService) {}
 
   create(data: CreateEventDto) {
     const eventData: Prisma.EventCreateInput = {
@@ -272,5 +275,65 @@ export class EventsService {
     });
     
     return events.map(event => event.location).filter(Boolean);
+  }
+
+  async delete(id: string, userId: string, userRole: string) {
+    // Find the event with photos
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      include: { photos: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
+
+    // Authorization check: Admin can delete any event
+    // For non-admin, we could add owner check if Event had a createdBy field
+    if (userRole !== 'ADMIN') {
+      throw new ForbiddenException('คุณไม่มีสิทธิ์ลบกิจกรรมนี้');
+    }
+
+    // Collect all file paths to delete from MinIO
+    const filePaths: string[] = [];
+    for (const photo of event.photos) {
+      // Extract photo path from URL
+      const photoPath = this.extractPathFromUrl(photo.url);
+      if (photoPath) filePaths.push(photoPath);
+      
+      // Extract thumbnail path from URL
+      if (photo.thumbnailUrl) {
+        const thumbnailPath = this.extractPathFromUrl(photo.thumbnailUrl);
+        if (thumbnailPath) filePaths.push(thumbnailPath);
+      }
+    }
+
+    // Delete from database using transaction
+    await this.prisma.$transaction([
+      // Delete all photos for this event
+      this.prisma.photo.deleteMany({ where: { eventId: id } }),
+      // Delete all join records for this event
+      this.prisma.joinEvent.deleteMany({ where: { eventId: id } }),
+      // Delete the event itself
+      this.prisma.event.delete({ where: { id } }),
+    ]);
+
+    // Delete files from MinIO
+    if (filePaths.length > 0) {
+      try {
+        await this.minioService.deleteObjects(filePaths);
+      } catch (error) {
+        // Log error but don't throw - DB records already deleted
+        console.error('Error deleting files from MinIO:', error);
+      }
+    }
+
+    return { success: true, message: 'ลบกิจกรรมเรียบร้อยแล้ว' };
+  }
+
+  private extractPathFromUrl(url: string): string | null {
+    // Extract path from full URL like http://localhost:9000/photos/photos/eventId/userId/filename
+    const match = url.match(/\/photos\/(.+)$/);
+    return match ? match[1] : null;
   }
 }

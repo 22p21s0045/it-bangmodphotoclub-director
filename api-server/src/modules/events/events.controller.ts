@@ -47,4 +47,12 @@ export class EventsController {
   leave(@Param('id') id: string, @Param('userId') userId: string) {
     return this.eventsService.leave(id, userId);
   }
+
+  @Delete(':id')
+  delete(
+    @Param('id') id: string, 
+    @Body() body: { userId: string; role: string }
+  ) {
+    return this.eventsService.delete(id, body.userId, body.role);
+  }
 }

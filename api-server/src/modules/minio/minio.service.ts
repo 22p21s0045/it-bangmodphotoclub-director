@@ -85,4 +85,15 @@ export class MinioService implements OnModuleInit {
     const endpoint = this.configService.get<string>('MINIO_ENDPOINT', 'http://localhost:9000');
     return `${endpoint}/${this.bucketName}/${path}`;
   }
+
+  // Delete a single object
+  async deleteObject(path: string): Promise<void> {
+    await this.minioClient.removeObject(this.bucketName, path);
+  }
+
+  // Delete multiple objects
+  async deleteObjects(paths: string[]): Promise<void> {
+    if (paths.length === 0) return;
+    await this.minioClient.removeObjects(this.bucketName, paths);
+  }
 }

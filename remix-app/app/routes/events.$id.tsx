@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { sessionStorage } from "~/session.server";
 import { PageTransition } from "~/components/page-transition";
+import { DeleteEventDialog } from "~/components/delete-event-dialog";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
@@ -38,11 +39,20 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export async function action({ request, params }: ActionFunctionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
-  const userId = formData.get("userId");
+  const userId = formData.get("userId") as string;
+  const userRole = formData.get("userRole") as string;
   const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
 
   if (intent === "leave") {
     await axios.delete(`${backendUrl}/events/${params.id}/join/${userId}`);
+    return json({ success: true });
+  }
+
+  if (intent === "delete") {
+    await axios.delete(`${backendUrl}/events/${params.id}`, {
+      data: { userId, role: userRole }
+    });
+    return json({ success: true, deleted: true });
   }
 
   return json({ success: true });
@@ -124,7 +134,7 @@ export default function EventDetail() {
                               </Badge>
                             </div>
                           </div>
-                          <div className="flex gap-2 flex-shrink-0">
+                          <div className="flex gap-2 flex-shrink-0 flex-wrap">
                             {isUserJoined && (
                               <LeaveEventDialog 
                                 eventId={resolvedEvent.id} 
@@ -133,6 +143,13 @@ export default function EventDetail() {
                               />
                             )}
                             <EditEventDialog event={resolvedEvent} />
+                            <DeleteEventDialog 
+                              eventId={resolvedEvent.id}
+                              eventTitle={resolvedEvent.title}
+                              userId={user?.id || ''}
+                              userRole={user?.role || 'USER'}
+                              photoCount={resolvedEvent.photos?.length || 0}
+                            />
                           </div>
                         </div>
                       </CardContent>
