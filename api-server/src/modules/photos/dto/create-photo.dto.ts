@@ -3,4 +3,5 @@ export class CreatePhotoDto {
   filename: string;
   userId: string;
   url: string;
+  path?: string; // Relative path for MinIO operations
 }

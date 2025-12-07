@@ -57,4 +57,32 @@ export class MinioService implements OnModuleInit {
   async getPresignedDownloadUrl(filename: string, expiry: number = 3600): Promise<string> {
     return await this.minioClient.presignedGetObject(this.bucketName, filename, expiry);
   }
+
+  // Get object as stream
+  async getObject(path: string): Promise<NodeJS.ReadableStream> {
+    return await this.minioClient.getObject(this.bucketName, path);
+  }
+
+  // Upload buffer directly
+  async putObject(path: string, buffer: Buffer, contentType: string = 'image/jpeg'): Promise<void> {
+    await this.minioClient.putObject(this.bucketName, path, buffer, buffer.length, {
+      'Content-Type': contentType,
+    });
+  }
+
+  // Get the MinIO client for advanced operations
+  getClient(): Minio.Client {
+    return this.minioClient;
+  }
+
+  // Get bucket name
+  getBucketName(): string {
+    return this.bucketName;
+  }
+
+  // Get public URL for a file
+  getPublicUrl(path: string): string {
+    const endpoint = this.configService.get<string>('MINIO_ENDPOINT', 'http://localhost:9000');
+    return `${endpoint}/${this.bucketName}/${path}`;
+  }
 }

@@ -272,7 +272,7 @@ export default function EventDetail() {
                             className="relative flex-none w-48 aspect-[3/2] rounded-md overflow-hidden border shadow-sm group"
                           >
                             <img 
-                              src={`http://localhost:9000/photos/${photo.url}`} 
+                              src={photo.thumbnailUrl || photo.url} 
                               alt={photo.filename} 
                               className="w-full h-full object-cover transition-transform group-hover:scale-105"
                             />
@@ -290,6 +290,7 @@ export default function EventDetail() {
                 {/* Upload Dialog */}
                 <UploadRawDialog
                   eventId={resolvedEvent.id}
+                  userId={user?.id || ''}
                   open={uploadDialogOpen}
                   onOpenChange={setUploadDialogOpen}
                   onSuccess={() => revalidator.revalidate()}

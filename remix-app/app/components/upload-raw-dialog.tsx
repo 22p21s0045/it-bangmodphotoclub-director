@@ -24,12 +24,13 @@ interface FileItem {
 
 interface UploadRawDialogProps {
   eventId: string;
+  userId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
 
-export function UploadRawDialog({ eventId, open, onOpenChange, onSuccess }: UploadRawDialogProps) {
+export function UploadRawDialog({ eventId, userId, open, onOpenChange, onSuccess }: UploadRawDialogProps) {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
@@ -86,7 +87,7 @@ export function UploadRawDialog({ eventId, open, onOpenChange, onSuccess }: Uplo
         const { data } = await axios.post('http://localhost:3000/photos/upload-url', {
           filename: fileItem.file.name,
           eventId: eventId,
-          userId: '1',
+          userId: userId,
         });
 
         // 2. Upload to MinIO
@@ -96,12 +97,13 @@ export function UploadRawDialog({ eventId, open, onOpenChange, onSuccess }: Uplo
           },
         });
 
-        // 3. Notify Backend
+        // 3. Notify Backend with full URL and relative path
         await axios.post('http://localhost:3000/photos', {
-          url: data.path,
+          url: data.publicUrl,  // Full MinIO URL for display
+          path: data.path,      // Relative path for worker
           filename: fileItem.file.name,
           eventId: eventId,
-          userId: '1',
+          userId: userId,
         });
 
         // Update status to success
