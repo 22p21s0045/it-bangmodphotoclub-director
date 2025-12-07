@@ -306,11 +306,19 @@ export default function EventDetail() {
                           <div className="flex items-center gap-2">
                             <ImageIcon className="w-5 h-5 text-primary" />
                             <span>รูปภาพ ({resolvedEvent.photos?.length || 0})</span>
-                            {resolvedEvent.photos && resolvedEvent.photos.length > 0 && (
-                              <span className="text-sm font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                                {formatBytes(resolvedEvent.photos.reduce((acc: number, p: Photo) => acc + (p.size || 0), 0))}
-                              </span>
-                            )}
+                            {(() => {
+                              const filteredPhotos = resolvedEvent.photos?.filter((p: Photo) => 
+                                activeGalleryTab === 'RAW' 
+                                  ? (!p.type || p.type === 'RAW')
+                                  : p.type === 'EDITED'
+                              ) || [];
+                              const totalSize = filteredPhotos.reduce((acc: number, p: Photo) => acc + (p.size || 0), 0);
+                              return filteredPhotos.length > 0 && (
+                                <span className={`text-sm font-normal px-2 py-0.5 rounded-full ${activeGalleryTab === 'EDITED' ? 'bg-green-100 dark:bg-green-900/30 text-green-600' : 'bg-muted text-muted-foreground'}`}>
+                                  {activeGalleryTab === 'RAW' ? 'RAW' : 'แต่งแล้ว'}: {formatBytes(totalSize)}
+                                </span>
+                              );
+                            })()}
                           </div>
                         </CardTitle>
                       </Button>
