@@ -7,7 +7,7 @@ import { EventDetailSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download, Palette, Trash2, CheckSquare, Square, X } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download, Palette, Trash2, CheckSquare, Square, X, CalendarPlus, ExternalLink } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
@@ -32,6 +32,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
@@ -268,6 +274,15 @@ export default function EventDetail() {
                               const daysUntil = differenceInDays(eventDate, today);
                               const isPast = daysUntil < 0;
                               
+                              // Generate calendar URLs
+                              const eventTitle = encodeURIComponent(resolvedEvent.title);
+                              const eventLocation = encodeURIComponent(resolvedEvent.location || '');
+                              const eventDescription = encodeURIComponent(resolvedEvent.description || '');
+                              const dateStr = format(eventDate, "yyyyMMdd");
+                              
+                              const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${dateStr}/${dateStr}&location=${eventLocation}&details=${eventDescription}`;
+                              const outlookUrl = `https://outlook.live.com/calendar/0/action/compose?subject=${eventTitle}&startdt=${format(eventDate, "yyyy-MM-dd")}&location=${eventLocation}&body=${eventDescription}`;
+                              
                               return (
                                 <div 
                                   key={index} 
@@ -279,20 +294,49 @@ export default function EventDetail() {
                                         : 'bg-muted/50'
                                   }`}
                                 >
-                                  <div className="font-semibold text-foreground">
-                                    {format(eventDate, "d MMMM yyyy", { locale: th })}
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1">
+                                      <div className="font-semibold text-foreground">
+                                        {format(eventDate, "d MMMM yyyy", { locale: th })}
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">
+                                        {format(eventDate, "EEEE", { locale: th })}
+                                      </div>
+                                      {!isPast && (
+                                        <Badge 
+                                          variant={daysUntil === 0 ? "default" : "outline"} 
+                                          className="mt-2 text-xs"
+                                        >
+                                          {daysUntil === 0 ? "วันนี้!" : `อีก ${daysUntil} วัน`}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Add to Calendar Button */}
+                                    {!isPast && (
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                            <CalendarPlus className="h-4 w-4" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuItem 
+                                            onClick={() => window.open(googleCalendarUrl, '_blank')}
+                                          >
+                                            <ExternalLink className="w-4 h-4 mr-2" />
+                                            Google Calendar
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem 
+                                            onClick={() => window.open(outlookUrl, '_blank')}
+                                          >
+                                            <ExternalLink className="w-4 h-4 mr-2" />
+                                            Outlook
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    )}
                                   </div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {format(eventDate, "EEEE", { locale: th })}
-                                  </div>
-                                  {!isPast && (
-                                    <Badge 
-                                      variant={daysUntil === 0 ? "default" : "outline"} 
-                                      className="mt-2 text-xs"
-                                    >
-                                      {daysUntil === 0 ? "วันนี้!" : `อีก ${daysUntil} วัน`}
-                                    </Badge>
-                                  )}
                                 </div>
                               );
                             })}
