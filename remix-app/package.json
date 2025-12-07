@@ -32,6 +32,7 @@
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
         "date-fns": "^4.1.0",
+        "framer-motion": "^12.23.25",
         "isbot": "^4.1.0",
         "lucide-react": "^0.330.0",
         "postcss": "^8.4.35",
