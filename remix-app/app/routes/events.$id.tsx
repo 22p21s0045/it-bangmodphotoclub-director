@@ -57,14 +57,30 @@ export default function EventDetail() {
 
   return (
     <PageTransition className="min-h-screen bg-muted/30">
-      {/* Header */}
-      <div className="bg-card border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3">
-          <Button variant="ghost" asChild className="pl-0 hover:bg-transparent hover:text-primary">
-            <Link to="/events" className="inline-flex items-center text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="w-4 h-4 mr-2" /> กลับไปหน้ากิจกรรม
+      {/* Modern Header with Stepper */}
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm">
+        <div className="container mx-auto px-4">
+          {/* Back Button Row */}
+          <div className="py-3 flex items-center">
+            <Link 
+              to="/events" 
+              className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all duration-200"
+            >
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+              <span>กลับไปหน้ากิจกรรม</span>
             </Link>
-          </Button>
+          </div>
+          
+          {/* Status Stepper */}
+          <Suspense fallback={<div className="h-24 animate-pulse bg-muted/20 rounded-lg mb-4" />}>
+            <Await resolve={event}>
+              {(resolvedEvent) => (
+                <div className="pb-5 pt-1">
+                  <EventStatusStepper currentStatus={resolvedEvent.status} />
+                </div>
+              )}
+            </Await>
+          </Suspense>
         </div>
       </div>
 
@@ -77,13 +93,6 @@ export default function EventDetail() {
             
             return (
               <div className="container mx-auto px-4 py-6">
-                {/* Status Stepper */}
-                <Card className="mb-6">
-                  <CardContent className="pt-6">
-                    <EventStatusStepper currentStatus={resolvedEvent.status} />
-                  </CardContent>
-                </Card>
-
                 {/* Two Column Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Main Content - Left Column */}
