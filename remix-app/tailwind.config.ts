@@ -64,6 +64,10 @@ export default {
             transform: "translateX(100%)",
           },
         },
+        shine: {
+          "0%": { transform: "translateX(-100%) skewX(-15deg)" },
+          "100%": { transform: "translateX(200%) skewX(-15deg)" },
+        },
         float: {
           "0%, 100%": {
             transform: "translateY(0)",
@@ -75,6 +79,7 @@ export default {
       },
       animation: {
         float: "float 3s ease-in-out infinite",
+        shine: "shine 3s infinite",
       },
     },
   },

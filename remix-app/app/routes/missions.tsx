@@ -182,6 +182,11 @@ export default function MissionsPage() {
                     opacity: 0.3,
                   }}
                 />
+                <div 
+                  className="absolute inset-0 rounded-full overflow-hidden"
+                >
+                  <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shine" />
+                </div>
                 <img 
                   src={userRank.rank.image} 
                   alt={userRank.rank.name}
