@@ -28,4 +28,11 @@ export class PhotosController {
   ) {
     return this.photosService.delete(id, body.userId, body.role);
   }
+
+  @Post('batch-delete')
+  async batchDelete(
+    @Body() body: { photoIds: string[]; userId: string; role: string }
+  ) {
+    return this.photosService.batchDelete(body.photoIds, body.userId, body.role);
+  }
 }

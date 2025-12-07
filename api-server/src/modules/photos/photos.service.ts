@@ -127,4 +127,28 @@ export class PhotosService {
     this.logger.log(`Photo ${id} deleted by user ${userId}`);
     return { message: 'ลบรูปภาพสำเร็จ' };
   }
+
+  async batchDelete(photoIds: string[], userId: string, role: string) {
+    const results = {
+      success: 0,
+      failed: 0,
+      errors: [] as string[],
+    };
+
+    for (const photoId of photoIds) {
+      try {
+        await this.delete(photoId, userId, role);
+        results.success++;
+      } catch (error) {
+        results.failed++;
+        results.errors.push(`Photo ${photoId}: ${error.message}`);
+      }
+    }
+
+    this.logger.log(`Batch delete: ${results.success} success, ${results.failed} failed`);
+    return {
+      message: `ลบรูปภาพสำเร็จ ${results.success} รูป`,
+      ...results,
+    };
+  }
 }

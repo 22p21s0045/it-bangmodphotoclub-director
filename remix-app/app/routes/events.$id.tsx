@@ -7,7 +7,7 @@ import { EventDetailSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download, Palette, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download, Palette, Trash2, CheckSquare, Square, X } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
@@ -24,6 +24,14 @@ import { Badge } from "~/components/ui/badge";
 import { sessionStorage } from "~/session.server";
 import { PageTransition } from "~/components/page-transition";
 import { DeleteEventDialog } from "~/components/delete-event-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
@@ -80,6 +88,9 @@ export default function EventDetail() {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [activeGalleryTab, setActiveGalleryTab] = useState<'RAW' | 'EDITED'>('RAW');
   const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [photosToDelete, setPhotosToDelete] = useState<Photo[]>([]);
 
   return (
     <PageTransition className="min-h-screen bg-muted/30">
@@ -352,6 +363,7 @@ export default function EventDetail() {
                         {/* Context-aware Action Buttons */}
                         <div className="flex gap-2">
                           {/* Upload Button */}
+                          {/* Upload Button */}
                           <Button 
                             size="sm" 
                             className={activeGalleryTab === 'EDITED' ? 'bg-green-600 hover:bg-green-700' : ''}
@@ -390,6 +402,49 @@ export default function EventDetail() {
                               </Button>
                             );
                           })()}
+                          
+                          {/* Select Mode Toggle */}
+                          {(user?.role === 'ADMIN' || resolvedEvent.joins?.some((j: JoinEvent) => j.userId === user?.id)) && (
+                            <>
+                              {isSelectMode ? (
+                                <div className="flex gap-2">
+                                  {selectedPhotos.size > 0 && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="destructive"
+                                      onClick={() => {
+                                        const photos = resolvedEvent.photos?.filter((p: Photo) => selectedPhotos.has(p.id)) || [];
+                                        setPhotosToDelete(photos);
+                                      }}
+                                    >
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      ลบ ({selectedPhotos.size})
+                                    </Button>
+                                  )}
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => {
+                                      setIsSelectMode(false);
+                                      setSelectedPhotos(new Set());
+                                    }}
+                                  >
+                                    <X className="w-4 h-4 mr-2" />
+                                    ยกเลิก
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => setIsSelectMode(true)}
+                                >
+                                  <CheckSquare className="w-4 h-4 mr-2" />
+                                  เลือก
+                                </Button>
+                              )}
+                            </>
+                          )}
                         </div>
                       </div>
                     )}
@@ -418,8 +473,20 @@ export default function EventDetail() {
                                 {filteredPhotos.map((photo: Photo) => (
                                   <div 
                                     key={photo.id}
-                                    className="aspect-square relative group overflow-hidden cursor-pointer"
-                                    onClick={() => setSelectedPhoto(photo)}
+                                    className={`aspect-square relative group overflow-hidden cursor-pointer ${isSelectMode && selectedPhotos.has(photo.id) ? 'ring-2 ring-primary ring-inset' : ''}`}
+                                    onClick={() => {
+                                      if (isSelectMode) {
+                                        const newSelected = new Set(selectedPhotos);
+                                        if (newSelected.has(photo.id)) {
+                                          newSelected.delete(photo.id);
+                                        } else {
+                                          newSelected.add(photo.id);
+                                        }
+                                        setSelectedPhotos(newSelected);
+                                      } else {
+                                        setSelectedPhoto(photo);
+                                      }
+                                    }}
                                   >
                                     <img
                                       src={photo.thumbnailUrl || photo.url}
@@ -427,7 +494,23 @@ export default function EventDetail() {
                                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                       loading="lazy"
                                     />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                    <div className={`absolute inset-0 transition-colors ${isSelectMode && selectedPhotos.has(photo.id) ? 'bg-primary/20' : 'bg-black/0 group-hover:bg-black/20'}`} />
+                                    
+                                    {/* Select Mode Checkbox */}
+                                    {isSelectMode && (
+                                      <div className="absolute top-1 left-1">
+                                        {selectedPhotos.has(photo.id) ? (
+                                          <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                                            <CheckSquare className="w-4 h-4 text-white" />
+                                          </div>
+                                        ) : (
+                                          <div className="w-6 h-6 bg-white/80 rounded border border-gray-300 flex items-center justify-center">
+                                            <Square className="w-4 h-4 text-gray-400" />
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                    
                                     {photo.type === 'EDITED' && (
                                       <div className="absolute top-1 right-1">
                                         <Badge className="bg-green-500 text-white text-xs px-1">
@@ -435,8 +518,9 @@ export default function EventDetail() {
                                         </Badge>
                                       </div>
                                     )}
-                                    {/* Delete button - visible on hover for Admin/Participant */}
-                                    {(user?.role === 'ADMIN' || resolvedEvent.joins?.some((j: JoinEvent) => j.userId === user?.id)) && (
+                                    
+                                    {/* Delete button - visible on hover for Admin/Participant (only when not in select mode) */}
+                                    {!isSelectMode && (user?.role === 'ADMIN' || resolvedEvent.joins?.some((j: JoinEvent) => j.userId === user?.id)) && (
                                       <Button
                                         size="icon"
                                         variant="destructive"
@@ -529,6 +613,71 @@ export default function EventDetail() {
                     }
                   }}
                 />
+                
+                {/* Batch Delete Dialog */}
+                <Dialog open={photosToDelete.length > 0} onOpenChange={(open) => !open && setPhotosToDelete([])}>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <div className="flex items-center gap-3 text-destructive">
+                        <div className="p-2 bg-destructive/10 rounded-full">
+                          <Trash2 className="w-6 h-6" />
+                        </div>
+                        <DialogTitle>ยืนยันการลบรูปภาพ {photosToDelete.length} รูป</DialogTitle>
+                      </div>
+                      <DialogDescription className="pt-4 space-y-4">
+                        <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto">
+                          {photosToDelete.slice(0, 8).map((photo) => (
+                            <div key={photo.id} className="aspect-square rounded overflow-hidden">
+                              <img 
+                                src={photo.thumbnailUrl || photo.url} 
+                                alt={photo.filename}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))}
+                          {photosToDelete.length > 8 && (
+                            <div className="aspect-square rounded bg-muted flex items-center justify-center text-muted-foreground">
+                              +{photosToDelete.length - 8}
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground text-center">
+                          การกระทำนี้ไม่สามารถย้อนกลับได้
+                        </p>
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setPhotosToDelete([])}
+                      >
+                        ยกเลิก
+                      </Button>
+                      <Button 
+                        variant="destructive"
+                        onClick={async () => {
+                          try {
+                            await axios.post('http://localhost:3000/photos/batch-delete', {
+                              photoIds: photosToDelete.map(p => p.id),
+                              userId: user?.id,
+                              role: user?.role
+                            });
+                            setPhotosToDelete([]);
+                            setSelectedPhotos(new Set());
+                            setIsSelectMode(false);
+                            revalidator.revalidate();
+                          } catch (err) {
+                            console.error('Error batch deleting photos:', err);
+                            alert('ไม่สามารถลบรูปภาพได้');
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        ลบ {photosToDelete.length} รูป
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             );
           }}
