@@ -2,11 +2,12 @@ import { json, defer, redirect, LoaderFunctionArgs, ActionFunctionArgs } from "@
 import { useLoaderData, Link, useFetcher, Await, useNavigate, useRevalidator } from "@remix-run/react";
 import type { JoinEvent, Photo } from "~/types";
 import { Suspense, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { EventDetailSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
@@ -71,6 +72,7 @@ export default function EventDetail() {
   const { event, user } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const revalidator = useRevalidator();
+  const [isGalleryOpen, setIsGalleryOpen] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
@@ -291,46 +293,82 @@ export default function EventDetail() {
                 <Card className="mt-6">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <ImageIcon className="w-5 h-5 text-primary" />
-                        <span>รูปภาพ ({resolvedEvent.photos?.length || 0})</span>
-                        {resolvedEvent.photos && resolvedEvent.photos.length > 0 && (
-                          <span className="text-sm font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                            {formatBytes(resolvedEvent.photos.reduce((acc: number, p: Photo) => acc + (p.size || 0), 0))}
-                          </span>
-                        )}
-                      </CardTitle>
-                      <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
+                      <Button 
+                        variant="ghost" 
+                        className="p-0 hover:bg-transparent flex items-center gap-2 group w-full justify-start"
+                        onClick={() => setIsGalleryOpen(!isGalleryOpen)}
+                      >
+                        <CardTitle className="text-lg flex items-center gap-2 cursor-pointer">
+                          <ChevronDown className={`w-5 h-5 text-primary transition-transform duration-200 ${isGalleryOpen ? "" : "-rotate-90"}`} />
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="w-5 h-5 text-primary" />
+                            <span>รูปภาพ ({resolvedEvent.photos?.length || 0})</span>
+                            {resolvedEvent.photos && resolvedEvent.photos.length > 0 && (
+                              <span className="text-sm font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                                {formatBytes(resolvedEvent.photos.reduce((acc: number, p: Photo) => acc + (p.size || 0), 0))}
+                              </span>
+                            )}
+                          </div>
+                        </CardTitle>
+                      </Button>
+                      <Button size="sm" onClick={(e) => {
+                        e.stopPropagation();
+                        setUploadDialogOpen(true);
+                      }}>
                         <Upload className="w-4 h-4 mr-2" />
                         อัปโหลดไฟล์ RAW
                       </Button>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-0">
-                    {resolvedEvent.photos && resolvedEvent.photos.length > 0 ? (
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-0.5">
-                        {resolvedEvent.photos.map((photo: Photo) => (
-                          <div 
-                            key={photo.id} 
-                            className="relative aspect-square overflow-hidden group cursor-pointer"
-                            onClick={() => setSelectedPhoto(photo)}
-                          >
-                            <img 
-                              src={photo.thumbnailUrl || photo.url} 
-                              alt={photo.filename} 
-                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg border border-dashed">
-                        <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                        <p>ยังไม่มีรูปภาพในกิจกรรมนี้</p>
-                      </div>
+                  
+                  <AnimatePresence initial={false}>
+                    {isGalleryOpen && (
+                      <motion.div
+                        key="gallery-content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        style={{ overflow: "hidden" }}
+                      >
+                        <CardContent className="p-0">
+                          {resolvedEvent.photos && resolvedEvent.photos.length > 0 ? (
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-0.5">
+                              {resolvedEvent.photos.map((photo: Photo) => (
+                                <div 
+                                  key={photo.id}
+                                  className="aspect-square relative group overflow-hidden cursor-pointer"
+                                  onClick={() => setSelectedPhoto(photo)}
+                                >
+                                  <img
+                                    src={photo.thumbnailUrl || photo.url}
+                                    alt={photo.filename}
+                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                    loading="lazy"
+                                  />
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-muted/10">
+                              <ImageIcon className="w-12 h-12 mb-3 opacity-20" />
+                              <p>ยังไม่มีรูปภาพ</p>
+                              <Button 
+                                variant="link" 
+                                onClick={() => setUploadDialogOpen(true)}
+                                className="mt-2"
+                              >
+                                อัปโหลดรูปภาพแรกเลย
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </motion.div>
                     )}
-                  </CardContent>
+                  </AnimatePresence>
                 </Card>
+
                 {/* Upload Dialog */}
                 <UploadRawDialog
                   eventId={resolvedEvent.id}
@@ -339,6 +377,7 @@ export default function EventDetail() {
                   onOpenChange={setUploadDialogOpen}
                   onSuccess={() => revalidator.revalidate()}
                 />
+                
                 {/* Photo Preview Dialog */}
                 <PhotoPreviewDialog
                   photo={selectedPhoto}
