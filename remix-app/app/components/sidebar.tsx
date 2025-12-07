@@ -1,5 +1,5 @@
 import { Link, useLocation, useRouteLoaderData } from "@remix-run/react";
-import { Calendar, ChevronLeft, ChevronRight, Home, List, Users } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Home, LayoutDashboard, List, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { User } from "~/types";
 import { cn } from "~/lib/utils";
@@ -84,18 +84,32 @@ export function Sidebar() {
           );
         })}
         {user?.role === "ADMIN" && (
-          <Link
-            to="/admin/users"
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-              location.pathname.startsWith("/admin/users") ? "bg-accent text-accent-foreground" : "text-muted-foreground",
-              isCollapsed ? "justify-center px-2" : ""
-            )}
-            title={isCollapsed ? "จัดการผู้ใช้งาน" : undefined}
-          >
-            <Users className="h-4 w-4" />
-            {!isCollapsed && <span>จัดการผู้ใช้งาน</span>}
-          </Link>
+          <>
+            <Link
+              to="/admin/dashboard"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                location.pathname.startsWith("/admin/dashboard") ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+                isCollapsed ? "justify-center px-2" : ""
+              )}
+              title={isCollapsed ? "Dashboard" : undefined}
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              {!isCollapsed && <span>Dashboard</span>}
+            </Link>
+            <Link
+              to="/admin/users"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                location.pathname.startsWith("/admin/users") ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+                isCollapsed ? "justify-center px-2" : ""
+              )}
+              title={isCollapsed ? "จัดการผู้ใช้งาน" : undefined}
+            >
+              <Users className="h-4 w-4" />
+              {!isCollapsed && <span>จัดการผู้ใช้งาน</span>}
+            </Link>
+          </>
         )}
       </nav>
     </div>
