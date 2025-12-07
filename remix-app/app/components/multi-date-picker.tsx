@@ -75,9 +75,13 @@ export function MultiDatePicker({ dates = [], onDatesChange, className }: MultiD
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
-            mode="single"
-            selected={selectedDates[0]}
-            onSelect={handleSelect}
+            mode="multiple"
+            selected={selectedDates}
+            onSelect={(dates) => {
+              const newDates = (dates || []).sort((a, b) => a.getTime() - b.getTime());
+              setSelectedDates(newDates);
+              onDatesChange?.(newDates);
+            }}
             initialFocus
             locale={th}
           />
