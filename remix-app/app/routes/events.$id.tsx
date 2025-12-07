@@ -7,13 +7,14 @@ import { EventDetailSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download, Palette } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
 import { LeaveEventDialog } from "~/components/leave-event-dialog";
 import { RemoveUserDialog } from "~/components/remove-user-dialog";
 import { UploadRawDialog } from "~/components/upload-raw-dialog";
+import { UploadEditedDialog } from "~/components/upload-edited-dialog";
 import { PhotoPreviewDialog } from "~/components/photo-preview-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { EventStatusStepper } from "~/components/event-status-stepper";
@@ -74,7 +75,9 @@ export default function EventDetail() {
   const revalidator = useRevalidator();
   const [isGalleryOpen, setIsGalleryOpen] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadEditedDialogOpen, setUploadEditedDialogOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [activeGalleryTab, setActiveGalleryTab] = useState<'RAW' | 'EDITED'>('RAW');
 
   return (
     <PageTransition className="min-h-screen bg-muted/30">
@@ -289,13 +292,13 @@ export default function EventDetail() {
                   </div>
                 </div>
 
-                {/* Full Width Photos Section */}
+                {/* Full Width Photos Section with Tabs */}
                 <Card className="mt-6">
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <Button 
                         variant="ghost" 
-                        className="p-0 hover:bg-transparent flex items-center gap-2 group w-full justify-start"
+                        className="p-0 hover:bg-transparent flex items-center gap-2 group"
                         onClick={() => setIsGalleryOpen(!isGalleryOpen)}
                       >
                         <CardTitle className="text-lg flex items-center gap-2 cursor-pointer">
@@ -311,28 +314,60 @@ export default function EventDetail() {
                           </div>
                         </CardTitle>
                       </Button>
-                      <Button size="sm" onClick={(e) => {
-                        e.stopPropagation();
-                        setUploadDialogOpen(true);
-                      }}>
-                        <Upload className="w-4 h-4 mr-2" />
-                        อัปโหลดไฟล์ RAW
-                      </Button>
-                      {resolvedEvent.photos && resolvedEvent.photos.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" onClick={(e) => {
+                          e.stopPropagation();
+                          setUploadDialogOpen(true);
+                        }}>
+                          <Upload className="w-4 h-4 mr-2" />
+                          RAW
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950" onClick={(e) => {
+                          e.stopPropagation();
+                          setUploadEditedDialogOpen(true);
+                        }}>
+                          <Palette className="w-4 h-4 mr-2" />
+                          แต่งแล้ว
+                        </Button>
+                        {resolvedEvent.photos && resolvedEvent.photos.length > 0 && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const backendUrl = window.ENV?.BACKEND_URL || 'http://localhost:3000';
+                              window.open(`${backendUrl}/events/${resolvedEvent.id}/photos/download`, '_blank');
+                            }}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            ZIP
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Tabs */}
+                    {isGalleryOpen && (
+                      <div className="flex gap-2 mt-3">
                         <Button 
                           size="sm" 
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const backendUrl = window.ENV?.BACKEND_URL || 'http://localhost:3000';
-                            window.open(`${backendUrl}/events/${resolvedEvent.id}/photos/download`, '_blank');
-                          }}
+                          variant={activeGalleryTab === 'RAW' ? 'default' : 'outline'}
+                          onClick={() => setActiveGalleryTab('RAW')}
                         >
-                          <Download className="w-4 h-4 mr-2" />
-                          ดาวน์โหลด ZIP
+                          <ImageIcon className="w-4 h-4 mr-1" />
+                          RAW ({resolvedEvent.photos?.filter((p: Photo) => !p.type || p.type === 'RAW').length || 0})
                         </Button>
-                      )}
-                    </div>
+                        <Button 
+                          size="sm" 
+                          variant={activeGalleryTab === 'EDITED' ? 'default' : 'outline'}
+                          className={activeGalleryTab === 'EDITED' ? 'bg-green-600 hover:bg-green-700' : 'border-green-500 text-green-600'}
+                          onClick={() => setActiveGalleryTab('EDITED')}
+                        >
+                          <Palette className="w-4 h-4 mr-1" />
+                          แต่งแล้ว ({resolvedEvent.photos?.filter((p: Photo) => p.type === 'EDITED').length || 0})
+                        </Button>
+                      </div>
+                    )}
                   </CardHeader>
                   
                   <AnimatePresence initial={false}>
@@ -346,49 +381,89 @@ export default function EventDetail() {
                         style={{ overflow: "hidden" }}
                       >
                         <CardContent className="p-0">
-                          {resolvedEvent.photos && resolvedEvent.photos.length > 0 ? (
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-0.5">
-                              {resolvedEvent.photos.map((photo: Photo) => (
-                                <div 
-                                  key={photo.id}
-                                  className="aspect-square relative group overflow-hidden cursor-pointer"
-                                  onClick={() => setSelectedPhoto(photo)}
-                                >
-                                  <img
-                                    src={photo.thumbnailUrl || photo.url}
-                                    alt={photo.filename}
-                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                    loading="lazy"
-                                  />
-                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-muted/10">
-                              <ImageIcon className="w-12 h-12 mb-3 opacity-20" />
-                              <p>ยังไม่มีรูปภาพ</p>
-                              <Button 
-                                variant="link" 
-                                onClick={() => setUploadDialogOpen(true)}
-                                className="mt-2"
-                              >
-                                อัปโหลดรูปภาพแรกเลย
-                              </Button>
-                            </div>
-                          )}
+                          {(() => {
+                            const filteredPhotos = resolvedEvent.photos?.filter((p: Photo) => 
+                              activeGalleryTab === 'RAW' 
+                                ? (!p.type || p.type === 'RAW')
+                                : p.type === 'EDITED'
+                            ) || [];
+                            
+                            return filteredPhotos.length > 0 ? (
+                              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-0.5">
+                                {filteredPhotos.map((photo: Photo) => (
+                                  <div 
+                                    key={photo.id}
+                                    className="aspect-square relative group overflow-hidden cursor-pointer"
+                                    onClick={() => setSelectedPhoto(photo)}
+                                  >
+                                    <img
+                                      src={photo.thumbnailUrl || photo.url}
+                                      alt={photo.filename}
+                                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                      loading="lazy"
+                                    />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                    {photo.type === 'EDITED' && (
+                                      <div className="absolute top-1 right-1">
+                                        <Badge className="bg-green-500 text-white text-xs px-1">
+                                          <Palette className="w-3 h-3" />
+                                        </Badge>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-muted/10">
+                                {activeGalleryTab === 'RAW' ? (
+                                  <>
+                                    <ImageIcon className="w-12 h-12 mb-3 opacity-20" />
+                                    <p>ยังไม่มีรูป RAW</p>
+                                    <Button 
+                                      variant="link" 
+                                      onClick={() => setUploadDialogOpen(true)}
+                                      className="mt-2"
+                                    >
+                                      อัปโหลดรูป RAW แรกเลย
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Palette className="w-12 h-12 mb-3 opacity-20 text-green-500" />
+                                    <p>ยังไม่มีรูปที่แต่งแล้ว</p>
+                                    <Button 
+                                      variant="link" 
+                                      onClick={() => setUploadEditedDialogOpen(true)}
+                                      className="mt-2 text-green-600"
+                                    >
+                                      อัปโหลดรูปที่แต่งแล้ว
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </CardContent>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </Card>
 
-                {/* Upload Dialog */}
+                {/* Upload RAW Dialog */}
                 <UploadRawDialog
                   eventId={resolvedEvent.id}
                   userId={user?.id || ''}
                   open={uploadDialogOpen}
                   onOpenChange={setUploadDialogOpen}
+                  onSuccess={() => revalidator.revalidate()}
+                />
+                
+                {/* Upload Edited Dialog */}
+                <UploadEditedDialog
+                  eventId={resolvedEvent.id}
+                  userId={user?.id || ''}
+                  open={uploadEditedDialogOpen}
+                  onOpenChange={setUploadEditedDialogOpen}
                   onSuccess={() => revalidator.revalidate()}
                 />
                 

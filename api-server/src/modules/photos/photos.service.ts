@@ -27,34 +27,46 @@ export class PhotosService {
   }
 
   async create(createPhotoDto: CreatePhotoDto) {
-    this.logger.log(`Creating photo: ${createPhotoDto.filename} for event ${createPhotoDto.eventId}`);
+    const photoType = createPhotoDto.type || 'RAW';
+    this.logger.log(`Creating ${photoType} photo: ${createPhotoDto.filename} for event ${createPhotoDto.eventId}`);
     
     const photo = await this.prisma.photo.create({
       data: {
         eventId: createPhotoDto.eventId,
         userId: createPhotoDto.userId,
         filename: createPhotoDto.filename,
-        url: createPhotoDto.url, // This should now be the full public URL
+        url: createPhotoDto.url,
         size: 0,
         mimeType: 'image/jpeg',
+        type: photoType,
       },
     });
 
-    // Update event status to PENDING_EDIT if it's currently PENDING_RAW
+    // Update event status based on photo type
     const event = await this.prisma.event.findUnique({
       where: { id: createPhotoDto.eventId },
     });
 
-    if (event && event.status === 'PENDING_RAW') {
-      await this.prisma.event.update({
-        where: { id: createPhotoDto.eventId },
-        data: { status: 'PENDING_EDIT' },
-      });
-      this.logger.log(`Event ${createPhotoDto.eventId} status updated to PENDING_EDIT`);
+    if (event) {
+      // RAW photo uploaded -> change PENDING_RAW to PENDING_EDIT
+      if (photoType === 'RAW' && event.status === 'PENDING_RAW') {
+        await this.prisma.event.update({
+          where: { id: createPhotoDto.eventId },
+          data: { status: 'PENDING_EDIT' },
+        });
+        this.logger.log(`Event ${createPhotoDto.eventId} status updated to PENDING_EDIT`);
+      }
+      // EDITED photo uploaded -> change PENDING_EDIT to COMPLETED
+      else if (photoType === 'EDITED' && event.status === 'PENDING_EDIT') {
+        await this.prisma.event.update({
+          where: { id: createPhotoDto.eventId },
+          data: { status: 'COMPLETED' },
+        });
+        this.logger.log(`Event ${createPhotoDto.eventId} status updated to COMPLETED`);
+      }
     }
 
     // Queue image processing job - pass relative path for MinIO operations
-    // Extract relative path from full URL if needed
     const relativePath = createPhotoDto.path || this.extractPathFromUrl(createPhotoDto.url);
     
     await this.imageQueue.add('process-image', {

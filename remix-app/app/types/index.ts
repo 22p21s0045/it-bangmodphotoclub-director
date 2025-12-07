@@ -83,6 +83,11 @@ export interface JoinEvent {
 
 // ============ Photo Types ============
 
+export enum PhotoType {
+  RAW = "RAW",
+  EDITED = "EDITED",
+}
+
 export interface Photo {
   id: string;
   url: string;
@@ -93,6 +98,7 @@ export interface Photo {
   width?: number | null;
   height?: number | null;
   metadata?: Record<string, unknown> | null;
+  type?: PhotoType | string;
   isApproved: boolean;
   createdAt: string | Date;
   updatedAt: string | Date;

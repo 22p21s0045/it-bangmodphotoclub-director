@@ -54,7 +54,7 @@ model JoinEvent {
 }
 
 model Photo {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   url          String
   thumbnailUrl String?
   filename     String
@@ -63,13 +63,19 @@ model Photo {
   width        Int?
   height       Int?
   metadata     Json?
-  isApproved   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  type         PhotoType @default(RAW)
+  isApproved   Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   userId       String
   eventId      String
-  event        Event    @relation(fields: [eventId], references: [id])
-  user         User     @relation(fields: [userId], references: [id])
+  event        Event     @relation(fields: [eventId], references: [id])
+  user         User      @relation(fields: [userId], references: [id])
+}
+
+enum PhotoType {
+  RAW
+  EDITED
 }
 
 model Badge {

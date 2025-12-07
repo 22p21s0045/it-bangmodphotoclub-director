@@ -4,4 +4,5 @@ export class CreatePhotoDto {
   userId: string;
   url: string;
   path?: string; // Relative path for MinIO operations
+  type?: 'RAW' | 'EDITED'; // Photo type, defaults to RAW
 }
