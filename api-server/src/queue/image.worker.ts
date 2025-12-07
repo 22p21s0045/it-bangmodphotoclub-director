@@ -69,22 +69,22 @@ export class ImageWorker extends WorkerHost implements OnModuleDestroy {
           const previewBuffer = await fs.readFile(tempPreviewPath);
           this.logger.log(`Extracted preview: ${previewBuffer.length} bytes`);
           
-          // Resize to thumbnail size using sharp
+          // Resize to preview size using sharp (1600px for fullscreen preview)
           thumbnailBuffer = await sharp(previewBuffer)
             .rotate() // Auto-rotate based on EXIF
-            .resize(400, 400, { 
+            .resize(1600, 1600, { 
               fit: 'inside',
               withoutEnlargement: true 
             })
-            .jpeg({ quality: 80 })
+            .jpeg({ quality: 85 })
             .toBuffer();
         } else {
           // Fallback: try to process directly with Sharp
           this.logger.warn('No embedded preview found, trying Sharp directly...');
           thumbnailBuffer = await sharp(buffer, { failOnError: false })
             .rotate()
-            .resize(400, 400, { fit: 'inside', withoutEnlargement: true })
-            .jpeg({ quality: 80 })
+            .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: 85 })
             .toBuffer();
         }
 
