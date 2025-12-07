@@ -263,13 +263,13 @@ export default function EventDetail() {
                       </Button>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-0">
                     {resolvedEvent.photos && resolvedEvent.photos.length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-0.5">
                         {resolvedEvent.photos.map((photo: Photo) => (
                           <div 
                             key={photo.id} 
-                            className="relative aspect-square rounded-md overflow-hidden border shadow-sm group cursor-pointer"
+                            className="relative aspect-square overflow-hidden group cursor-pointer"
                           >
                             <img 
                               src={photo.thumbnailUrl || photo.url} 

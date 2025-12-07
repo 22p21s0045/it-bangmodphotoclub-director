@@ -123,7 +123,7 @@ export function UploadRawDialog({ eventId, userId, open, onOpenChange, onSuccess
 
     setUploading(false);
     setUploadStatus(errorCount === 0 ? "success" : "error");
-    if (successCount > 0 && onSuccess) onSuccess();
+    // Note: onSuccess will be called when dialog closes to give time for thumbnail processing
   };
 
   const resetState = () => {
@@ -134,8 +134,15 @@ export function UploadRawDialog({ eventId, userId, open, onOpenChange, onSuccess
 
   const handleClose = () => {
     if (!uploading) {
+      const hadSuccessfulUploads = files.some(f => f.status === "success");
       onOpenChange(false);
-      setTimeout(resetState, 300);
+      setTimeout(() => {
+        resetState();
+        // Refresh data after giving time for thumbnail processing
+        if (hadSuccessfulUploads && onSuccess) {
+          onSuccess();
+        }
+      }, 500);
     }
   };
 
