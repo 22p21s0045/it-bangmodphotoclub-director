@@ -1,18 +1,32 @@
 import { useState } from "react";
-import { useParams, Link } from "@remix-run/react";
+import { useParams, Link, useNavigate } from "@remix-run/react";
 import axios from "axios";
-import { ArrowLeft, Upload, FileWarning, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Upload, FileWarning, CheckCircle2, AlertCircle, Loader2, X } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 import { RAW_EXTENSIONS, isRawFile } from "~/lib/raw-extensions";
+
+type UploadStatus = "idle" | "getting-url" | "uploading" | "notifying" | "success" | "error";
 
 export default function UploadPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isRaw, setIsRaw] = useState<boolean | null>(null);
+  
+  // Upload modal state
+  const [showModal, setShowModal] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -35,11 +49,15 @@ export default function UploadPage() {
 
   const handleUpload = async () => {
     if (!file || !id || !isRaw) return;
+    
     setUploading(true);
-    setError(null);
+    setShowModal(true);
+    setUploadStatus("getting-url");
+    setUploadError(null);
 
     try {
       // 1. Get Presigned URL
+      setUploadStatus("getting-url");
       const { data } = await axios.post('http://localhost:3000/photos/upload-url', {
         filename: file.name,
         eventId: id,
@@ -47,6 +65,7 @@ export default function UploadPage() {
       });
 
       // 2. Upload to MinIO
+      setUploadStatus("uploading");
       await axios.put(data.url, file, {
         headers: {
           'Content-Type': file.type,
@@ -54,6 +73,7 @@ export default function UploadPage() {
       });
 
       // 3. Notify Backend
+      setUploadStatus("notifying");
       await axios.post('http://localhost:3000/photos', {
         url: data.path,
         filename: file.name,
@@ -61,19 +81,133 @@ export default function UploadPage() {
         userId: '1',
       });
 
-      alert('อัปโหลดสำเร็จ!');
+      setUploadStatus("success");
       setFile(null);
       setIsRaw(null);
-    } catch (error) {
-      console.error(error);
-      setError('อัปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+    } catch (err) {
+      console.error(err);
+      setUploadStatus("error");
+      setUploadError('อัปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
     } finally {
       setUploading(false);
     }
   };
 
+  const handleCloseModal = () => {
+    if (uploadStatus === "success") {
+      navigate(`/events/${id}`);
+    } else if (uploadStatus === "error") {
+      setShowModal(false);
+      setUploadStatus("idle");
+    }
+  };
+
+  const getStatusMessage = () => {
+    switch (uploadStatus) {
+      case "getting-url":
+        return "กำลังเตรียมการอัปโหลด...";
+      case "uploading":
+        return "กำลังอัปโหลดไฟล์...";
+      case "notifying":
+        return "กำลังบันทึกข้อมูล...";
+      case "success":
+        return "อัปโหลดสำเร็จ!";
+      case "error":
+        return "เกิดข้อผิดพลาด";
+      default:
+        return "";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-muted/30">
+      {/* Upload Progress Modal */}
+      <Dialog open={showModal} onOpenChange={(open) => {
+        if (!open && (uploadStatus === "success" || uploadStatus === "error")) {
+          handleCloseModal();
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              {uploadStatus === "success" ? "อัปโหลดสำเร็จ" : uploadStatus === "error" ? "เกิดข้อผิดพลาด" : "กำลังอัปโหลด"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center py-6 space-y-6">
+            {/* Status Icon */}
+            {uploadStatus === "success" ? (
+              <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
+              </div>
+            ) : uploadStatus === "error" ? (
+              <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <X className="w-10 h-10 text-red-600 dark:text-red-400" />
+              </div>
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+              </div>
+            )}
+
+            {/* Status Message */}
+            <div className="text-center space-y-2">
+              <p className="text-lg font-medium">{getStatusMessage()}</p>
+              {file && uploadStatus !== "success" && uploadStatus !== "error" && (
+                <p className="text-sm text-muted-foreground">{file.name}</p>
+              )}
+              {uploadError && (
+                <p className="text-sm text-red-600 dark:text-red-400">{uploadError}</p>
+              )}
+            </div>
+
+            {/* Progress Steps */}
+            {uploadStatus !== "success" && uploadStatus !== "error" && (
+              <div className="w-full space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    uploadStatus === "getting-url" ? "bg-primary text-primary-foreground" : "bg-green-500 text-white"
+                  }`}>
+                    {uploadStatus === "getting-url" ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  </div>
+                  <span className={uploadStatus === "getting-url" ? "text-foreground font-medium" : "text-muted-foreground"}>
+                    เตรียมการอัปโหลด
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    uploadStatus === "uploading" ? "bg-primary text-primary-foreground" : 
+                    uploadStatus === "notifying" ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {uploadStatus === "uploading" ? <Loader2 className="w-4 h-4 animate-spin" /> : 
+                     uploadStatus === "notifying" ? <CheckCircle2 className="w-4 h-4" /> : "2"}
+                  </div>
+                  <span className={uploadStatus === "uploading" ? "text-foreground font-medium" : "text-muted-foreground"}>
+                    อัปโหลดไฟล์
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    uploadStatus === "notifying" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {uploadStatus === "notifying" ? <Loader2 className="w-4 h-4 animate-spin" /> : "3"}
+                  </div>
+                  <span className={uploadStatus === "notifying" ? "text-foreground font-medium" : "text-muted-foreground"}>
+                    บันทึกข้อมูล
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Action Button */}
+            {(uploadStatus === "success" || uploadStatus === "error") && (
+              <Button onClick={handleCloseModal} className="w-full">
+                {uploadStatus === "success" ? "กลับไปหน้ารายละเอียดงาน" : "ลองอีกครั้ง"}
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <div className="bg-card border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3">
@@ -166,7 +300,7 @@ export default function UploadPage() {
             >
               {uploading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   กำลังอัปโหลด...
                 </>
               ) : (
@@ -189,3 +323,4 @@ export default function UploadPage() {
     </div>
   );
 }
+
