@@ -58,7 +58,11 @@ export class EventsController {
   }
 
   @Get(':id/photos/download')
-  async downloadPhotos(@Param('id') id: string, @Res() res: Response) {
-    return this.eventsService.downloadPhotosAsZip(id, res);
+  async downloadPhotos(
+    @Param('id') id: string, 
+    @Query('type') type: string,
+    @Res() res: Response
+  ) {
+    return this.eventsService.downloadPhotosAsZip(id, res, type);
   }
 }

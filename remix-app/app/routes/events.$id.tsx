@@ -314,58 +314,73 @@ export default function EventDetail() {
                           </div>
                         </CardTitle>
                       </Button>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" onClick={(e) => {
-                          e.stopPropagation();
-                          setUploadDialogOpen(true);
-                        }}>
-                          <Upload className="w-4 h-4 mr-2" />
-                          RAW
-                        </Button>
-                        <Button size="sm" variant="outline" className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950" onClick={(e) => {
-                          e.stopPropagation();
-                          setUploadEditedDialogOpen(true);
-                        }}>
-                          <Palette className="w-4 h-4 mr-2" />
-                          แต่งแล้ว
-                        </Button>
-                        {resolvedEvent.photos && resolvedEvent.photos.length > 0 && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const backendUrl = window.ENV?.BACKEND_URL || 'http://localhost:3000';
-                              window.open(`${backendUrl}/events/${resolvedEvent.id}/photos/download`, '_blank');
-                            }}
-                          >
-                            <Download className="w-4 h-4 mr-2" />
-                            ZIP
-                          </Button>
-                        )}
-                      </div>
                     </div>
                     
-                    {/* Tabs */}
+                    {/* Tabs + Download Button */}
                     {isGalleryOpen && (
-                      <div className="flex gap-2 mt-3">
-                        <Button 
-                          size="sm" 
-                          variant={activeGalleryTab === 'RAW' ? 'default' : 'outline'}
-                          onClick={() => setActiveGalleryTab('RAW')}
-                        >
-                          <ImageIcon className="w-4 h-4 mr-1" />
-                          RAW ({resolvedEvent.photos?.filter((p: Photo) => !p.type || p.type === 'RAW').length || 0})
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant={activeGalleryTab === 'EDITED' ? 'default' : 'outline'}
-                          className={activeGalleryTab === 'EDITED' ? 'bg-green-600 hover:bg-green-700' : 'border-green-500 text-green-600'}
-                          onClick={() => setActiveGalleryTab('EDITED')}
-                        >
-                          <Palette className="w-4 h-4 mr-1" />
-                          แต่งแล้ว ({resolvedEvent.photos?.filter((p: Photo) => p.type === 'EDITED').length || 0})
-                        </Button>
+                      <div className="flex items-center justify-between mt-3 flex-wrap gap-2">
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant={activeGalleryTab === 'RAW' ? 'default' : 'outline'}
+                            onClick={() => setActiveGalleryTab('RAW')}
+                          >
+                            <ImageIcon className="w-4 h-4 mr-1" />
+                            RAW ({resolvedEvent.photos?.filter((p: Photo) => !p.type || p.type === 'RAW').length || 0})
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant={activeGalleryTab === 'EDITED' ? 'default' : 'outline'}
+                            className={activeGalleryTab === 'EDITED' ? 'bg-green-600 hover:bg-green-700' : 'border-green-500 text-green-600'}
+                            onClick={() => setActiveGalleryTab('EDITED')}
+                          >
+                            <Palette className="w-4 h-4 mr-1" />
+                            แต่งแล้ว ({resolvedEvent.photos?.filter((p: Photo) => p.type === 'EDITED').length || 0})
+                          </Button>
+                        </div>
+                        
+                        {/* Context-aware Action Buttons */}
+                        <div className="flex gap-2">
+                          {/* Upload Button */}
+                          <Button 
+                            size="sm" 
+                            className={activeGalleryTab === 'EDITED' ? 'bg-green-600 hover:bg-green-700' : ''}
+                            onClick={() => {
+                              if (activeGalleryTab === 'RAW') {
+                                setUploadDialogOpen(true);
+                              } else {
+                                setUploadEditedDialogOpen(true);
+                              }
+                            }}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {activeGalleryTab === 'RAW' ? 'อัพโหลดรูปที่ยังไม่แต่ง' : 'อัพโหลดรูปที่แต่งแล้ว'}
+                          </Button>
+                          
+                          {/* Download Button */}
+                          {(() => {
+                            const currentPhotos = resolvedEvent.photos?.filter((p: Photo) => 
+                              activeGalleryTab === 'RAW' 
+                                ? (!p.type || p.type === 'RAW')
+                                : p.type === 'EDITED'
+                            ) || [];
+                            
+                            return currentPhotos.length > 0 && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className={activeGalleryTab === 'EDITED' ? 'border-green-500 text-green-600' : ''}
+                                onClick={() => {
+                                  const backendUrl = window.ENV?.BACKEND_URL || 'http://localhost:3000';
+                                  window.open(`${backendUrl}/events/${resolvedEvent.id}/photos/download?type=${activeGalleryTab}`, '_blank');
+                                }}
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                {activeGalleryTab === 'RAW' ? 'ดาวน์โหลดรูปไปแต่ง' : 'ดาวน์โหลดรูปที่แต่งแล้ว'}
+                              </Button>
+                            );
+                          })()}
+                        </div>
                       </div>
                     )}
                   </CardHeader>

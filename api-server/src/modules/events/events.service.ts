@@ -338,7 +338,7 @@ export class EventsService {
     return match ? match[1] : null;
   }
 
-  async downloadPhotosAsZip(id: string, res: any): Promise<void> {
+  async downloadPhotosAsZip(id: string, res: any, type?: string): Promise<void> {
     try {
       const event = await this.prisma.event.findUnique({
         where: { id },
@@ -349,7 +349,15 @@ export class EventsService {
         throw new NotFoundException(`ไม่พบกิจกรรม ID: ${id}`);
       }
 
-      if (!event.photos || event.photos.length === 0) {
+      // Filter photos by type if specified
+      let photosToDownload = event.photos || [];
+      if (type === 'RAW') {
+        photosToDownload = photosToDownload.filter(p => !p.type || p.type === 'RAW');
+      } else if (type === 'EDITED') {
+        photosToDownload = photosToDownload.filter(p => p.type === 'EDITED');
+      }
+
+      if (photosToDownload.length === 0) {
         throw new BadRequestException('ไม่มีรูปภาพในกิจกรรมนี้');
       }
 
@@ -362,18 +370,19 @@ export class EventsService {
         throw err;
       });
 
-      // Set response headers
+      // Set response headers with descriptive filename
       const safeTitle = event.title.replace(/[^a-zA-Z0-9ก-๙]/g, '_');
+      const typeLabel = type === 'EDITED' ? '_edited' : type === 'RAW' ? '_raw' : '';
       res.set({
         'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${safeTitle}_photos.zip"`,
+        'Content-Disposition': `attachment; filename="${safeTitle}${typeLabel}_photos.zip"`,
       });
 
       // Pipe archive to response
       archive.pipe(res);
 
       // Add each photo to the archive
-      for (const photo of event.photos) {
+      for (const photo of photosToDownload) {
         try {
           const photoPath = this.extractPathFromUrl(photo.url);
           console.log(`Processing photo: ${photo.filename}, URL: ${photo.url}, Path: ${photoPath}`);
