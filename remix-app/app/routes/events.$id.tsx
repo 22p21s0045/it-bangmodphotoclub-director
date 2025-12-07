@@ -1,11 +1,12 @@
 import { json, defer, LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Link, useFetcher, Await } from "@remix-run/react";
+import type { JoinEvent, Photo } from "~/types";
 import { Suspense } from "react";
 import { EventDetailSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, ImageIcon, FileText } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, ImageIcon, FileText, Upload } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
@@ -64,7 +65,7 @@ export default function EventDetail() {
       <Suspense fallback={<EventDetailSkeleton />}>
         <Await resolve={event}>
           {(resolvedEvent) => {
-            const isUserJoined = user && resolvedEvent.joins?.some((j: any) => j.userId === user.id);
+            const isUserJoined = user && resolvedEvent.joins?.some((j: JoinEvent) => j.userId === user.id);
             const participantCount = resolvedEvent.joins?.length || 0;
             const isFull = resolvedEvent.joinLimit > 0 && participantCount >= resolvedEvent.joinLimit;
             
@@ -148,7 +149,7 @@ export default function EventDetail() {
                           {user?.role === "ADMIN" && (
                             <AssignUserDialog 
                               eventId={resolvedEvent.id} 
-                              joinedUserIds={resolvedEvent.joins?.map((j: any) => j.userId) || []}
+                              joinedUserIds={resolvedEvent.joins?.map((j: JoinEvent) => j.userId) || []}
                               onAssign={() => {}}
                             />
                           )}
@@ -157,23 +158,23 @@ export default function EventDetail() {
                       <CardContent>
                         {resolvedEvent.joins && resolvedEvent.joins.length > 0 ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {resolvedEvent.joins.map((join: any) => (
+                            {resolvedEvent.joins.map((join: JoinEvent) => (
                               <div key={join.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-muted/50 border">
                                 <div className="flex items-center gap-3 overflow-hidden">
                                   <Avatar className="h-10 w-10">
-                                    <AvatarImage src={join.user.avatar} />
-                                    <AvatarFallback>{join.user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                                    <AvatarImage src={join.user?.avatar ?? undefined} />
+                                    <AvatarFallback>{join.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                                   </Avatar>
                                   <div className="flex flex-col overflow-hidden">
-                                    <span className="font-medium truncate">{join.user.name || "User"}</span>
-                                    <span className="text-xs text-muted-foreground truncate">{join.user.email}</span>
+                                    <span className="font-medium truncate">{join.user?.name || "User"}</span>
+                                    <span className="text-xs text-muted-foreground truncate">{join.user?.email}</span>
                                   </div>
                                 </div>
                                 {user?.role === "ADMIN" && (
                                   <RemoveUserDialog 
                                     eventId={resolvedEvent.id}
                                     userId={join.userId}
-                                    userName={join.user.name || "User"}
+                                    userName={join.user?.name || "User"}
                                   />
                                 )}
                               </div>
@@ -248,15 +249,23 @@ export default function EventDetail() {
                 {/* Full Width Photos Section */}
                 <Card className="mt-6">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <ImageIcon className="w-5 h-5 text-primary" />
-                      รูปภาพ ({resolvedEvent.photos?.length || 0})
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <ImageIcon className="w-5 h-5 text-primary" />
+                        รูปภาพ ({resolvedEvent.photos?.length || 0})
+                      </CardTitle>
+                      <Button asChild size="sm">
+                        <Link to={`/events/${resolvedEvent.id}/upload`}>
+                          <Upload className="w-4 h-4 mr-2" />
+                          อัปโหลดไฟล์ RAW
+                        </Link>
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     {resolvedEvent.photos && resolvedEvent.photos.length > 0 ? (
                       <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2">
-                        {resolvedEvent.photos.map((photo: any) => (
+                        {resolvedEvent.photos.map((photo: Photo) => (
                           <div 
                             key={photo.id} 
                             className="flex-shrink-0 w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 bg-muted rounded-lg overflow-hidden"

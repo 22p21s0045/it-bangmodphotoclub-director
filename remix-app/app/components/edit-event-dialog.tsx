@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useFetcher } from "@remix-run/react";
+import type { Event } from "~/types";
 import { format } from "date-fns";
 import { CalendarDays, MapPin, Users, Clock, FileText, Info, Pencil } from "lucide-react";
 import { Button } from "~/components/ui/button";
@@ -31,7 +32,7 @@ type ActionData = {
 };
 
 interface EditEventDialogProps {
-  event: any;
+  event: Event;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
@@ -46,7 +47,7 @@ export function EditEventDialog({ event, open: controlledOpen, onOpenChange: con
   const setOpen = isControlled ? controlledOnOpenChange! : setUncontrolledOpen;
   
   const [eventDates, setEventDates] = useState<Date[]>(
-    event.eventDates ? event.eventDates.map((d: string) => new Date(d)) : []
+    event.eventDates ? event.eventDates.map((d) => new Date(d as string)) : []
   );
   const [submissionDeadline, setSubmissionDeadline] = useState<Date | undefined>(
     event.submissionDeadline ? new Date(event.submissionDeadline) : undefined
@@ -57,7 +58,7 @@ export function EditEventDialog({ event, open: controlledOpen, onOpenChange: con
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      setEventDates(event.eventDates ? event.eventDates.map((d: string) => new Date(d)) : []);
+      setEventDates(event.eventDates ? event.eventDates.map((d) => new Date(d as string)) : []);
       setSubmissionDeadline(event.submissionDeadline ? new Date(event.submissionDeadline) : undefined);
     }
   }, [open, event]);
@@ -141,7 +142,7 @@ export function EditEventDialog({ event, open: controlledOpen, onOpenChange: con
                 <textarea
                   id="description"
                   name="description"
-                  defaultValue={event.description}
+                  defaultValue={event.description ?? ""}
                   placeholder="อธิบายเกี่ยวกับกิจกรรม..."
                   rows={4}
                   className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
@@ -156,7 +157,7 @@ export function EditEventDialog({ event, open: controlledOpen, onOpenChange: con
                   </Label>
                   <LocationAutocomplete
                     name="location"
-                    value={event.location}
+                    value={event.location ?? ""}
                     placeholder="เช่น สวนลุมพินี"
                   />
                 </div>

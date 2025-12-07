@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { toast } from "react-toastify";
 
 // Create axios instance with base configuration
@@ -55,7 +55,7 @@ apiClient.interceptors.response.use(
 );
 
 // Helper function for manual error handling
-export const handleError = (error: any, customMessage?: string) => {
+export const handleError = (error: unknown, customMessage?: string) => {
   console.error("Error:", error);
   
   if (customMessage) {
@@ -64,12 +64,15 @@ export const handleError = (error: any, customMessage?: string) => {
   }
 
   // If error is already handled by interceptor, don't show duplicate toast
-  if (error.response || error.request) {
-    return;
+  if (axios.isAxiosError(error)) {
+    if (error.response || error.request) {
+      return;
+    }
   }
 
   // Handle other types of errors
-  toast.error(error.message || "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+  const message = error instanceof Error ? error.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ";
+  toast.error(message);
 };
 
 export default apiClient;

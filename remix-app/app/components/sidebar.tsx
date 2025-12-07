@@ -1,6 +1,7 @@
 import { Link, useLocation, useRouteLoaderData } from "@remix-run/react";
 import { Calendar, ChevronLeft, ChevronRight, Home, List, Users } from "lucide-react";
 import { useState } from "react";
+import type { User } from "~/types";
 import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
 
@@ -25,7 +26,7 @@ const sidebarItems = [
 export function Sidebar() {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const data = useRouteLoaderData("root") as { user: any };
+  const data = useRouteLoaderData("root") as { user: User | null };
   const user = data?.user;
 
   return (

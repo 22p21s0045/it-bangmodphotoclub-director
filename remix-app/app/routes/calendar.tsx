@@ -1,5 +1,6 @@
 import { json, LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Link, useSearchParams, useNavigation } from "@remix-run/react";
+import type { Event } from "~/types";
 import axios from "axios";
 import { 
   format, 
@@ -108,8 +109,8 @@ export default function Calendar() {
         </div>
         <div className="grid grid-cols-7 auto-rows-fr bg-border gap-px">
             {days.map((day, dayIdx) => {
-                const dayEvents = events.filter((event: any) => 
-                    event.eventDates && event.eventDates.some((dateStr: string) => isSameDay(new Date(dateStr), day))
+                const dayEvents = events.filter((event: Event) => 
+                    event.eventDates && event.eventDates.some((dateStr) => isSameDay(new Date(dateStr as string), day))
                 );
 
                 return (
@@ -125,7 +126,7 @@ export default function Calendar() {
                             {format(day, "d")}
                         </div>
                         <div className="space-y-1">
-                            {dayEvents.map((event: any) => (
+                            {dayEvents.map((event: Event) => (
                                 <Link 
                                     key={event.id} 
                                     to={`/events/${event.id}`}

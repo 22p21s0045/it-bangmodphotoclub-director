@@ -1,5 +1,6 @@
 import { json, defer, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useSubmit, Link, useFetcher, Await, useNavigate } from "@remix-run/react";
+import type { Event, JoinEvent } from "~/types";
 import { sessionStorage } from "~/session.server";
 import { useState, useEffect, Suspense } from "react";
 import { EventListSkeleton } from "~/components/skeletons";
@@ -77,7 +78,7 @@ export default function Events() {
   const fetcher = useFetcher();
   const navigate = useNavigate();
   
-  const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [searchValue, setSearchValue] = useState(search);
   const [startDateValue, setStartDateValue] = useState<Date | undefined>(
     startDate ? new Date(startDate) : undefined
@@ -195,7 +196,7 @@ export default function Events() {
                         <>
                           {/* Mobile Card View */}
                           <div className="md:hidden flex-1 min-h-0 overflow-auto p-4 space-y-3">
-                            {events.map((event: any) => {
+                            {events.map((event: Event) => {
                               const isFull = event.joinLimit > 0 && event.joins && event.joins.length >= event.joinLimit;
                               const displayStatus = (event.status === 'UPCOMING' && isFull) ? 'PENDING_RAW' : event.status;
                               
@@ -248,12 +249,12 @@ export default function Events() {
                                   
                                   {event.joins && event.joins.length > 0 && (
                                     <div className="mt-3 flex -space-x-2">
-                                      {event.joins.slice(0, 5).map((join: any) => (
+                                      {event.joins.slice(0, 5).map((join: JoinEvent) => (
                                         <Avatar 
                                           key={join.id} 
                                           className="h-7 w-7 ring-2 ring-white"
                                         >
-                                          <AvatarImage src={join.user?.avatar} />
+                                          <AvatarImage src={join.user?.avatar ?? undefined} />
                                           <AvatarFallback className="text-xs">{join.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                                         </Avatar>
                                       ))}
@@ -284,7 +285,7 @@ export default function Events() {
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {events.map((event: any) => (
+                                {events.map((event: Event) => (
                                   <TableRow 
                                     key={event.id}
                                     className="hover:bg-muted/50 transition-colors cursor-pointer"
@@ -350,13 +351,13 @@ export default function Events() {
                                       <div className="flex -space-x-3 overflow-hidden p-1">
                                         {event.joins && event.joins.length > 0 ? (
                                           <TooltipProvider delayDuration={0}>
-                                            {event.joins.map((join: any) => (
+                                            {event.joins.map((join: JoinEvent) => (
                                               <Tooltip key={join.id}>
                                                 <TooltipTrigger asChild>
                                                   <Avatar 
                                                     className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-900 cursor-pointer hover:z-10 hover:scale-110 transition-transform"
                                                   >
-                                                    <AvatarImage src={join.user?.avatar} />
+                                                    <AvatarImage src={join.user?.avatar ?? undefined} />
                                                     <AvatarFallback>{join.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                                                   </Avatar>
                                                 </TooltipTrigger>
@@ -393,7 +394,7 @@ export default function Events() {
                                           {user && (
                                             <DropdownMenuItem 
                                               className="w-full cursor-pointer"
-                                              disabled={event.joins?.some((j: any) => j.userId === user.id) || fetcher.state === "submitting"}
+                                              disabled={event.joins?.some((j: JoinEvent) => j.userId === user.id) || fetcher.state === "submitting"}
                                               onSelect={() => {
                                                 fetcher.submit(
                                                   { eventId: event.id }, 
@@ -402,7 +403,7 @@ export default function Events() {
                                               }}
                                             >
                                                <UserPlus className="mr-2 h-4 w-4" />
-                                               {event.joins?.some((j: any) => j.userId === user.id) ? "เข้าร่วมแล้ว" : "เข้าร่วม"}
+                                               {event.joins?.some((j: JoinEvent) => j.userId === user.id) ? "เข้าร่วมแล้ว" : "เข้าร่วม"}
                                             </DropdownMenuItem>
                                           )}
                                         </DropdownMenuContent>

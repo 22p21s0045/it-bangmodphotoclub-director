@@ -1,5 +1,6 @@
 import { json, defer, LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useFetcher, Link, Form, Await } from "@remix-run/react";
+import type { User } from "~/types";
 import { 
   Table, 
   TableBody, 
@@ -102,7 +103,7 @@ export default function AdminUsers() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data) {
@@ -110,17 +111,17 @@ export default function AdminUsers() {
     }
   }, [fetcher.state, fetcher.data]);
 
-  const handleDelete = (user: any) => {
+  const handleDelete = (user: User) => {
     setSelectedUser(user);
     setDeleteDialogOpen(true);
   };
 
-  const handleRoleChange = (user: any) => {
+  const handleRoleChange = (user: User) => {
     setSelectedUser(user);
     setRoleDialogOpen(true);
   };
 
-  const handleToggleStatus = (user: any) => {
+  const handleToggleStatus = (user: User) => {
     fetcher.submit(
       { intent: "toggleStatus", userId: user.id, isActive: (!user.isActive).toString() },
       { method: "post" }
@@ -225,7 +226,7 @@ export default function AdminUsers() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {resolvedUsers.map((user: any, index: number) => (
+                  {resolvedUsers.map((user: User, index: number) => (
                     <TableRow 
                       key={user.id} 
                       className={`
@@ -236,7 +237,7 @@ export default function AdminUsers() {
                     >
                       <TableCell>
                         <Avatar>
-                          <AvatarImage src={user.avatar} />
+                          <AvatarImage src={user.avatar ?? undefined} />
                           <AvatarFallback>{user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                         </Avatar>
                       </TableCell>

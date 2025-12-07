@@ -1,5 +1,6 @@
 import { json, defer, LoaderFunctionArgs, ActionFunctionArgs, redirect } from "@remix-run/node";
 import { useLoaderData, useActionData, Form, useNavigation, Await } from "@remix-run/react";
+import type { User, UpdateUserDto } from "~/types";
 import axios from "axios";
 import { useState, useEffect, useRef, Suspense } from "react";
 import { ProfileSkeleton } from "~/components/skeletons";
@@ -46,17 +47,17 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ error: "รหัสนักศึกษาต้องเป็นตัวเลข 11 หลัก" }, { status: 400 });
   }
 
-  const updates: any = {};
+  const updates: Partial<UpdateUserDto> = {};
 
-  if (name && name !== user.name) updates.name = name;
-  if (studentId !== null && studentId !== user.studentId) updates.studentId = studentId;
-  if (avatar && avatar !== user.avatar) updates.avatar = avatar;
+  if (name && name !== user.name) updates.name = name as string;
+  if (studentId !== null && studentId !== user.studentId) updates.studentId = studentId as string;
+  if (avatar && avatar !== user.avatar) updates.avatar = avatar as string;
   
   if (password) {
     if (password !== confirmPassword) {
       return json({ error: "รหัสผ่านไม่ตรงกัน" }, { status: 400 });
     }
-    updates.password = password;
+    updates.password = password as string;
   }
 
   if (Object.keys(updates).length === 0) {
@@ -83,9 +84,10 @@ export async function action({ request }: ActionFunctionArgs) {
         } 
       }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to update profile", error);
-    const errorMessage = error.response?.data?.message || error.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
+    const axiosError = error as { response?: { data?: { message?: string } }, message?: string };
+    const errorMessage = axiosError.response?.data?.message || axiosError.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
     return json({ error: errorMessage }, { status: 500 });
   }
 }
@@ -127,7 +129,7 @@ export default function Profile() {
   );
 }
 
-function ProfileForm({ user, actionData, isSubmitting }: { user: any, actionData: any, isSubmitting: boolean }) {
+function ProfileForm({ user, actionData, isSubmitting }: { user: User, actionData: { error?: string, success?: boolean, message?: string } | undefined, isSubmitting: boolean }) {
   const [name, setName] = useState(user.name);
   const [studentId, setStudentId] = useState(user.studentId || "");
   const [avatarPreview, setAvatarPreview] = useState(user.avatar);
@@ -211,7 +213,7 @@ function ProfileForm({ user, actionData, isSubmitting }: { user: any, actionData
             <div className="flex flex-col items-center justify-center gap-4 mb-6">
               <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <Avatar className="h-32 w-32 border-4 border-white shadow-lg group-hover:opacity-90 transition-opacity">
-                  <AvatarImage src={avatarPreview} className="object-cover" />
+                  <AvatarImage src={avatarPreview ?? undefined} className="object-cover" />
                   <AvatarFallback className="text-4xl bg-slate-300">
                     {user.name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
@@ -244,7 +246,7 @@ function ProfileForm({ user, actionData, isSubmitting }: { user: any, actionData
               <Input 
                 id="name" 
                 name="name" 
-                value={name}
+                value={name ?? ""}
                 onChange={(e) => setName(e.target.value)}
                 required 
               />

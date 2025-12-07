@@ -1,8 +1,9 @@
 import { create } from 'zustand';
+import type { User } from '~/types';
 
 interface AppState {
-  user: any | null;
-  setUser: (user: any) => void;
+  user: User | null;
+  setUser: (user: User | null) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
