@@ -150,14 +150,11 @@ export class PhotosService {
       }
       
       // If RAW photo deleted, check if any RAW photos remain
-      if (photo.type === 'RAW' || !photo.type) {
+      if (photo.type === 'RAW') {
         const remainingRawPhotos = await this.prisma.photo.count({
           where: {
             eventId: photo.eventId,
-            OR: [
-              { type: 'RAW' },
-              { type: null },
-            ],
+            type: 'RAW',
           },
         });
 

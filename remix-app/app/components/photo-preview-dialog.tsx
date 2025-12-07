@@ -13,7 +13,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Info
+  Info,
+  Trash2
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { format } from "date-fns";
@@ -42,6 +43,8 @@ interface PhotoPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPhotoChange: (photo: any) => void;
+  onDelete?: (photo: any) => void;
+  canDelete?: boolean;
 }
 
 export function PhotoPreviewDialog({ 
@@ -49,7 +52,9 @@ export function PhotoPreviewDialog({
   photos, 
   open, 
   onOpenChange,
-  onPhotoChange 
+  onPhotoChange,
+  onDelete,
+  canDelete = false
 }: PhotoPreviewDialogProps) {
   const [showInfo, setShowInfo] = useState(false);
   const [direction, setDirection] = useState(0);
@@ -173,6 +178,16 @@ export function PhotoPreviewDialog({
             >
               <Info className="w-5 h-5" />
             </Button>
+            {canDelete && onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-red-500/50 hover:text-red-400"
+                onClick={() => onDelete(photo)}
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"

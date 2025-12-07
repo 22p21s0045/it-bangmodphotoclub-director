@@ -589,26 +589,30 @@ export default function EventDetail() {
                   onOpenChange={setUploadEditedDialogOpen}
                   onSuccess={() => revalidator.revalidate()}
                 />
-                
                 {/* Photo Preview Dialog */}
                 <PhotoPreviewDialog
                   photo={selectedPhoto}
                   photos={resolvedEvent.photos || []}
                   open={!!selectedPhoto}
-                  onOpenChange={(open) => !open && setSelectedPhoto(null)}
+                  onOpenChange={(open: boolean) => !open && setSelectedPhoto(null)}
                   onPhotoChange={setSelectedPhoto}
+                  canDelete={user?.role === 'ADMIN' || resolvedEvent.joins?.some((j: JoinEvent) => j.userId === user?.id)}
+                  onDelete={(photo: Photo) => {
+                    setPhotoToDelete(photo);
+                  }}
                 />
                 
                 {/* Delete Photo Dialog */}
                 <DeletePhotoDialog
                   photo={photoToDelete}
                   open={!!photoToDelete}
-                  onOpenChange={(open) => !open && setPhotoToDelete(null)}
+                  onOpenChange={(open: boolean) => !open && setPhotoToDelete(null)}
                   onConfirm={async () => {
                     if (photoToDelete) {
                       await axios.delete(`http://localhost:3000/photos/${photoToDelete.id}`, {
                         data: { userId: user?.id, role: user?.role }
                       });
+                      setSelectedPhoto(null);
                       revalidator.revalidate();
                     }
                   }}
