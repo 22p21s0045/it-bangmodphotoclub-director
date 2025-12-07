@@ -1,4 +1,4 @@
-import { json, defer, LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
+import { json, defer, redirect, LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Link, useFetcher, Await, useNavigate, useRevalidator } from "@remix-run/react";
 import type { JoinEvent, Photo } from "~/types";
 import { Suspense, useState } from "react";
@@ -52,7 +52,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     await axios.delete(`${backendUrl}/events/${params.id}`, {
       data: { userId, role: userRole }
     });
-    return json({ success: true, deleted: true });
+    return redirect("/events?deleted=true");
   }
 
   return json({ success: true });

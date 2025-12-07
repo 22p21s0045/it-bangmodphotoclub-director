@@ -1,8 +1,9 @@
 import { json, defer, type LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useSubmit, Link, useFetcher, Await, useNavigate } from "@remix-run/react";
+import { useLoaderData, useSubmit, Link, useFetcher, Await, useNavigate, useSearchParams } from "@remix-run/react";
+import { toast } from "react-toastify";
 import type { Event, JoinEvent } from "~/types";
 import { sessionStorage } from "~/session.server";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { EventListSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format } from "date-fns";
@@ -78,6 +79,28 @@ export default function Events() {
   const submit = useSubmit();
   const fetcher = useFetcher();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const toastShownRef = useRef(false);
+
+  // Check for deleted query param to show toast
+  useEffect(() => {
+    const isDeleted = searchParams.get("deleted") === "true";
+
+    if (isDeleted && !toastShownRef.current) {
+      toastShownRef.current = true;
+      toast.success("ลบกิจกรรมเรียบร้อยแล้ว");
+      
+      // Delay clearing the URL to ensure UI updates don't conflict and toast has time to process
+      setTimeout(() => {
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete("deleted");
+        setSearchParams(newSearchParams, { replace: true, preventScrollReset: true });
+      }, 1000); // 1 second delay
+    } else if (!isDeleted) {
+      toastShownRef.current = false;
+    }
+  }, [searchParams, setSearchParams]);
+  
   
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [searchValue, setSearchValue] = useState(search);
