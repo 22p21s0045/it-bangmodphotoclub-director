@@ -7,6 +7,7 @@ import { UsersModule } from './modules/users/users.module';
 import { EventsModule } from './modules/events/events.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { MissionsModule } from './modules/missions/missions.module';
 import { ImageWorker } from './queue/image.worker';
 
 @Module({
@@ -29,6 +30,7 @@ import { ImageWorker } from './queue/image.worker';
     EventsModule,
     AuthModule,
     DashboardModule,
+    MissionsModule,
   ],
   controllers: [],
   providers: [ImageWorker],

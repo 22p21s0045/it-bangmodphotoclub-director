@@ -24,6 +24,7 @@ model User {
   badges         UserBadge[]
   level          UserLevel?
   activityLogs   EventActivityLog[]
+  missions       UserMission[]
 }
 
 model Event {
@@ -150,4 +151,32 @@ model EventActivityLog {
   createdAt DateTime    @default(now())
   event     Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user      User?       @relation(fields: [userId], references: [id])
+}
+
+model Mission {
+  id          String        @id @default(uuid())
+  title       String
+  description String
+  expReward   Int           @default(10)
+  type        MissionType   @default(MANUAL)
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  users       UserMission[]
+}
+
+model UserMission {
+  id          String   @id @default(uuid())
+  userId      String
+  missionId   String
+  completedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  mission     Mission  @relation(fields: [missionId], references: [id])
+
+  @@unique([userId, missionId])
+}
+
+enum MissionType {
+  MANUAL
+  AUTO_JOIN
+  AUTO_PHOTO
 }

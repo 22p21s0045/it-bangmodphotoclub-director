@@ -1,5 +1,5 @@
 import { Link, useLocation, useRouteLoaderData } from "@remix-run/react";
-import { Calendar, ChevronLeft, ChevronRight, Home, LayoutDashboard, List, Users } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Home, LayoutDashboard, List, Target, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { User } from "~/types";
 import { cn } from "~/lib/utils";
@@ -21,6 +21,11 @@ const sidebarItems = [
     title: "ปฏิทิน",
     href: "/calendar",
     icon: Calendar,
+  },
+  {
+    title: "ภารกิจ",
+    href: "/missions",
+    icon: Target,
   },
 ];
 
