@@ -13,6 +13,7 @@ import { AssignUserDialog } from "~/components/assign-user-dialog";
 import { LeaveEventDialog } from "~/components/leave-event-dialog";
 import { RemoveUserDialog } from "~/components/remove-user-dialog";
 import { UploadRawDialog } from "~/components/upload-raw-dialog";
+import { PhotoPreviewDialog } from "~/components/photo-preview-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { EventStatusStepper } from "~/components/event-status-stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -51,6 +52,7 @@ export default function EventDetail() {
   const navigate = useNavigate();
   const revalidator = useRevalidator();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -270,6 +272,7 @@ export default function EventDetail() {
                           <div 
                             key={photo.id} 
                             className="relative aspect-square overflow-hidden group cursor-pointer"
+                            onClick={() => setSelectedPhoto(photo)}
                           >
                             <img 
                               src={photo.thumbnailUrl || photo.url} 
@@ -294,6 +297,14 @@ export default function EventDetail() {
                   open={uploadDialogOpen}
                   onOpenChange={setUploadDialogOpen}
                   onSuccess={() => revalidator.revalidate()}
+                />
+                {/* Photo Preview Dialog */}
+                <PhotoPreviewDialog
+                  photo={selectedPhoto}
+                  photos={resolvedEvent.photos || []}
+                  open={!!selectedPhoto}
+                  onOpenChange={(open) => !open && setSelectedPhoto(null)}
+                  onPhotoChange={setSelectedPhoto}
                 />
               </div>
             );
