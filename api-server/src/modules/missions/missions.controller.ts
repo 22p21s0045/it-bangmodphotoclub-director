@@ -11,7 +11,9 @@ export class MissionsController {
   }
 
   @Get('user/:userId')
-  getUserMissions(@Param('userId') userId: string) {
+  async getUserMissions(@Param('userId') userId: string) {
+    // Auto-check and complete missions based on current stats
+    await this.missionsService.checkAndCompleteMissions(userId);
     return this.missionsService.getUserMissions(userId);
   }
 

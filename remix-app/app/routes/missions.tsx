@@ -33,6 +33,10 @@ interface Mission {
   type: string;
   completed: boolean;
   completedAt: string | null;
+  progress: {
+    current: number;
+    required: number;
+  };
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -281,26 +285,28 @@ export default function MissionsPage() {
                         {mission.title}
                       </h3>
                       <p className="text-sm text-muted-foreground">{mission.description}</p>
+                      
+                      {/* Progress Bar */}
+                      {!mission.completed && (
+                        <div className="mt-2">
+                          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                            <span>ความคืบหน้า</span>
+                            <span className="font-medium">{mission.progress.current}/{mission.progress.required}</span>
+                          </div>
+                          <div className="w-full bg-muted rounded-full h-2">
+                            <div
+                              className="bg-primary h-2 rounded-full transition-all"
+                              style={{ width: `${(mission.progress.current / mission.progress.required) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Reward */}
-                    <Badge variant={mission.completed ? "secondary" : "default"} className="text-sm">
+                    <Badge variant={mission.completed ? "secondary" : "default"} className="text-sm flex-shrink-0">
                       +{mission.expReward} EXP
                     </Badge>
-
-                    {/* Complete Button */}
-                    {!mission.completed && (
-                      <fetcher.Form method="post">
-                        <input type="hidden" name="missionId" value={mission.id} />
-                        <button
-                          type="submit"
-                          disabled={fetcher.state !== "idle"}
-                          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
-                        >
-                          {fetcher.state !== "idle" ? "กำลังทำ..." : "ทำเสร็จ"}
-                        </button>
-                      </fetcher.Form>
-                    )}
                   </div>
                 ))}
               </div>
