@@ -36,6 +36,7 @@ export function LeaveEventDialog({ eventId, userId, isUserJoined }: LeaveEventDi
       <DialogTrigger asChild>
         <Button 
           variant="destructive" 
+          size="sm"
         >
           <UserMinus className="w-4 h-4 mr-2" />
           ถอนตัว

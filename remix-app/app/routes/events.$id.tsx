@@ -168,6 +168,7 @@ export default function EventDetail() {
                             </div>
                           </div>
                           <div className="flex gap-2 flex-shrink-0 flex-wrap">
+                            <EditEventDialog event={resolvedEvent} />
                             {isUserJoined && (
                               <LeaveEventDialog 
                                 eventId={resolvedEvent.id} 
@@ -175,7 +176,6 @@ export default function EventDetail() {
                                 isUserJoined={isUserJoined}
                               />
                             )}
-                            <EditEventDialog event={resolvedEvent} />
                             <DeleteEventDialog 
                               eventId={resolvedEvent.id}
                               eventTitle={resolvedEvent.title}
