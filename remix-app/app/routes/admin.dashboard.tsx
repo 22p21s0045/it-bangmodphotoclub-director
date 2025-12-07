@@ -100,7 +100,7 @@ export default function AdminDashboard() {
       title: "รูปภาพ",
       value: stats.overview.totalPhotos,
       icon: Image,
-      description: formatBytes(stats.photoStats.totalStorageBytes),
+      description: "รูปทั้งหมด",
       color: "text-purple-500",
     },
   ];
