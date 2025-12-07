@@ -1,4 +1,5 @@
 import type { MetaFunction } from "@remix-run/node";
+import { PageTransition } from "~/components/page-transition";
 
 export const meta: MetaFunction = () => {
   return [
@@ -9,11 +10,13 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
   return (
-    <div className="flex h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-foreground">IT Bangmod Photo Club</h1>
-        <p className="mt-4 text-lg text-muted-foreground">Welcome to the club!</p>
+    <PageTransition>
+      <div className="flex h-screen items-center justify-center bg-muted">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-foreground">IT Bangmod Photo Club</h1>
+          <p className="mt-4 text-lg text-muted-foreground">Welcome to the club!</p>
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

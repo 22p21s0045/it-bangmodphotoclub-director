@@ -19,6 +19,7 @@ import { EventStatusStepper } from "~/components/event-status-stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { sessionStorage } from "~/session.server";
+import { PageTransition } from "~/components/page-transition";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
@@ -55,7 +56,7 @@ export default function EventDetail() {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <PageTransition className="min-h-screen bg-muted/30">
       {/* Header */}
       <div className="bg-card border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3">
@@ -311,6 +312,6 @@ export default function EventDetail() {
           }}
         </Await>
       </Suspense>
-    </div>
+    </PageTransition>
   );
 }

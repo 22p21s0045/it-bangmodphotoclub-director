@@ -16,6 +16,7 @@ import {
 } from "date-fns";
 import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import { CalendarSkeleton } from "~/components/skeletons";
+import { PageTransition } from "~/components/page-transition";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -80,7 +81,7 @@ export default function Calendar() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <PageTransition className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <Link to="/events" className="inline-flex items-center text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to List
@@ -142,6 +143,6 @@ export default function Calendar() {
             })}
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

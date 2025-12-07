@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { CheckCircle2, AlertCircle, Camera } from "lucide-react";
 import { ImageCropper } from "~/components/image-cropper";
+import { PageTransition } from "~/components/page-transition";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await sessionStorage.getSession(request.headers.get("Cookie"));
@@ -99,7 +100,7 @@ export default function Profile() {
   const isSubmitting = navigation.state === "submitting";
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
+    <PageTransition className="container mx-auto p-6 max-w-2xl">
       <h1 className="text-3xl font-bold mb-8">จัดการโปรไฟล์</h1>
 
       {actionData?.error && (
@@ -125,7 +126,7 @@ export default function Profile() {
           )}
         </Await>
       </Suspense>
-    </div>
+    </PageTransition>
   );
 }
 

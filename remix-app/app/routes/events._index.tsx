@@ -40,6 +40,7 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { MoreHorizontal, Eye, Pencil, UserPlus } from "lucide-react";
+import { PageTransition } from "~/components/page-transition";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await sessionStorage.getSession(request.headers.get("Cookie"));
@@ -130,7 +131,7 @@ export default function Events() {
   }, [searchValue, startDateValue, endDateValue, submit, search, startDate, endDate]);
 
   return (
-    <div className="h-full flex flex-col bg-muted/50 overflow-hidden">
+    <PageTransition className="h-full flex flex-col bg-muted/50 overflow-hidden">
       <div className="container mx-auto p-4 flex flex-col flex-1 min-h-0 space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 flex-shrink-0">
           <div>
@@ -539,6 +540,6 @@ export default function Events() {
           />
         )}
       </div>
-    </div>
+    </PageTransition>
   );
 }
