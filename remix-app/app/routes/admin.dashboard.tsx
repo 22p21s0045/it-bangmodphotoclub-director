@@ -1,9 +1,10 @@
 import { json, LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { Users, Calendar, Image, Clock, Camera, Trophy } from "lucide-react";
+import { Users, Calendar, Image, Clock, Camera, Trophy, TrendingUp, FileSpreadsheet } from "lucide-react";
 import axios from "axios";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
@@ -39,6 +40,10 @@ interface DashboardStats {
     createdAt: string;
     user: { id: string; name: string; avatar: string | null } | null;
     event: { id: string; title: string };
+  }>;
+  monthlyEvents: Array<{
+    month: string;
+    events: number;
   }>;
 }
 
@@ -131,6 +136,62 @@ export default function AdminDashboard() {
             </Card>
           ))}
         </div>
+
+        {/* Monthly Events Chart */}
+        <Card className="mb-6">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              กิจกรรมรายเดือน
+            </CardTitle>
+            <button
+              onClick={() => {
+                const backendUrl = (window as any).ENV?.BACKEND_URL || 'http://localhost:3000';
+                window.open(`${backendUrl}/dashboard/events/export`, '_blank');
+              }}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              Export Excel
+            </button>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={stats.monthlyEvents}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="month" 
+                    className="text-xs" 
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <YAxis 
+                    className="text-xs" 
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                    }}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="events"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2 }}
+                    activeDot={{ r: 6, fill: 'hsl(var(--primary))' }}
+                    name="จำนวนกิจกรรม"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Middle Row: Photo Stats + Leaderboard */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
