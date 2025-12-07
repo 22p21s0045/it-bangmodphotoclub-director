@@ -242,46 +242,42 @@ export default function EventDetail() {
                         )}
                       </CardContent>
                     </Card>
-
-                    {/* Photos Card */}
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <ImageIcon className="w-5 h-5 text-primary" />
-                          รูปภาพ ({resolvedEvent.photos?.length || 0})
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {resolvedEvent.photos && resolvedEvent.photos.length > 0 ? (
-                          <div className="grid grid-cols-2 gap-2">
-                            {resolvedEvent.photos.slice(0, 4).map((photo: any, index: number) => (
-                              <div key={photo.id} className="aspect-square bg-muted rounded-lg overflow-hidden relative">
-                                <img 
-                                  src={photo.thumbnailUrl || photo.url} 
-                                  alt="รูปภาพกิจกรรม" 
-                                  className="w-full h-full object-cover" 
-                                />
-                                {index === 3 && resolvedEvent.photos.length > 4 && (
-                                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                    <span className="text-white text-lg font-bold">
-                                      +{resolvedEvent.photos.length - 4}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                            <p className="text-sm">ยังไม่มีรูปภาพ</p>
-                            <p className="text-xs">เป็นคนแรกที่อัปโหลด!</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
                   </div>
                 </div>
+
+                {/* Full Width Photos Section */}
+                <Card className="mt-6">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <ImageIcon className="w-5 h-5 text-primary" />
+                      รูปภาพ ({resolvedEvent.photos?.length || 0})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {resolvedEvent.photos && resolvedEvent.photos.length > 0 ? (
+                      <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2">
+                        {resolvedEvent.photos.map((photo: any) => (
+                          <div 
+                            key={photo.id} 
+                            className="flex-shrink-0 w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 bg-muted rounded-lg overflow-hidden"
+                          >
+                            <img 
+                              src={photo.thumbnailUrl || photo.url} 
+                              alt="รูปภาพกิจกรรม" 
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" 
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <ImageIcon className="w-16 h-16 mx-auto mb-3 opacity-20" />
+                        <p className="text-base">ยังไม่มีรูปภาพ</p>
+                        <p className="text-sm">เป็นคนแรกที่อัปโหลด!</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             );
           }}
