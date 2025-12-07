@@ -5,33 +5,7 @@ import { ArrowLeft, Upload, FileWarning, CheckCircle2, AlertCircle } from "lucid
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
-
-// Common RAW file extensions
-const RAW_EXTENSIONS = [
-  '.cr2', '.cr3',  // Canon
-  '.nef', '.nrw',  // Nikon
-  '.arw', '.srf', '.sr2',  // Sony
-  '.dng',  // Adobe/Generic
-  '.raf',  // Fujifilm
-  '.orf',  // Olympus
-  '.rw2',  // Panasonic
-  '.pef',  // Pentax
-  '.srw',  // Samsung
-  '.x3f',  // Sigma
-  '.raw', '.rwl', '.dcs', '.dcr', '.kdc', '.k25',  // Kodak
-  '.mrw',  // Minolta
-  '.3fr',  // Hasselblad
-  '.fff',  // Imacon/Hasselblad
-  '.iiq',  // Phase One
-  '.erf',  // Epson
-  '.mef',  // Mamiya
-  '.mos',  // Leaf
-];
-
-const isRawFile = (filename: string): boolean => {
-  const ext = filename.toLowerCase().slice(filename.lastIndexOf('.'));
-  return RAW_EXTENSIONS.includes(ext);
-};
+import { RAW_EXTENSIONS, isRawFile } from "~/lib/raw-extensions";
 
 export default function UploadPage() {
   const { id } = useParams();
