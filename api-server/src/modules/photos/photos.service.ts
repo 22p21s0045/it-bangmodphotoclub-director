@@ -40,6 +40,19 @@ export class PhotosService {
       },
     });
 
+    // Update event status to PENDING_EDIT if it's currently PENDING_RAW
+    const event = await this.prisma.event.findUnique({
+      where: { id: createPhotoDto.eventId },
+    });
+
+    if (event && event.status === 'PENDING_RAW') {
+      await this.prisma.event.update({
+        where: { id: createPhotoDto.eventId },
+        data: { status: 'PENDING_EDIT' },
+      });
+      this.logger.log(`Event ${createPhotoDto.eventId} status updated to PENDING_EDIT`);
+    }
+
     // Queue image processing job - pass relative path for MinIO operations
     // Extract relative path from full URL if needed
     const relativePath = createPhotoDto.path || this.extractPathFromUrl(createPhotoDto.url);
