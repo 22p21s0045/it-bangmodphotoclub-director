@@ -1,6 +1,6 @@
 import { json, LoaderFunctionArgs, ActionFunctionArgs, redirect } from "@remix-run/node";
 import { useLoaderData, useFetcher, Form } from "@remix-run/react";
-import { Plus, Target, Trash2, Camera, Calendar } from "lucide-react";
+import { Plus, Target, Trash2, Camera, Calendar, Pencil } from "lucide-react";
 import { useState } from "react";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -61,6 +61,19 @@ export async function action({ request }: ActionFunctionArgs) {
   } else if (intent === "delete") {
     const missionId = formData.get("missionId") as string;
     await axios.delete(`${backendUrl}/missions/${missionId}`);
+  } else if (intent === "edit") {
+    const missionId = formData.get("missionId") as string;
+    const title = formData.get("title") as string;
+    const description = formData.get("description") as string;
+    const expReward = parseInt(formData.get("expReward") as string) || 10;
+    const type = formData.get("type") as string;
+
+    await axios.patch(`${backendUrl}/missions/${missionId}`, {
+      title,
+      description,
+      expReward,
+      type,
+    });
   }
 
   return json({ success: true });
@@ -70,6 +83,7 @@ export default function AdminMissionsPage() {
   const { missions } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingMission, setEditingMission] = useState<Mission | null>(null);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -191,6 +205,83 @@ export default function AdminMissionsPage() {
           </DialogContent>
         </Dialog>
 
+        {/* Edit Mission Dialog */}
+        <Dialog open={!!editingMission} onOpenChange={(open) => !open && setEditingMission(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-primary" />
+                แก้ไขภารกิจ
+              </DialogTitle>
+            </DialogHeader>
+            {editingMission && (
+              <fetcher.Form method="post" onSubmit={() => setEditingMission(null)}>
+                <input type="hidden" name="intent" value="edit" />
+                <input type="hidden" name="missionId" value={editingMission.id} />
+                
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <Label htmlFor="edit-title">ชื่อภารกิจ</Label>
+                    <Input 
+                      id="edit-title" 
+                      name="title" 
+                      defaultValue={editingMission.title}
+                      required
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-description">รายละเอียด</Label>
+                    <Input 
+                      id="edit-description" 
+                      name="description" 
+                      defaultValue={editingMission.description}
+                      required
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-expReward">EXP ที่ได้รับ</Label>
+                    <Input 
+                      id="edit-expReward" 
+                      name="expReward" 
+                      type="number" 
+                      defaultValue={editingMission.expReward}
+                      min={1}
+                      required
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-type">ประเภท</Label>
+                    <select 
+                      id="edit-type" 
+                      name="type"
+                      className="w-full mt-1 px-3 py-2 rounded-md border border-input bg-background text-foreground"
+                      defaultValue={editingMission.type}
+                    >
+                      <option value="AUTO_PHOTO">📷 นับจากรูปที่อัปโหลด</option>
+                      <option value="AUTO_JOIN">🎯 นับจากกิจกรรมที่เข้าร่วม</option>
+                      <option value="MANUAL">✋ Admin อนุมัติเอง</option>
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={fetcher.state !== "idle"}
+                    className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  >
+                    {fetcher.state !== "idle" ? "กำลังบันทึก..." : "บันทึก"}
+                  </button>
+                </div>
+              </fetcher.Form>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {/* Missions List */}
         <Card>
           <CardHeader>
@@ -216,6 +307,14 @@ export default function AdminMissionsPage() {
                     {getTypeBadge(mission.type)}
 
                     <Badge className="text-sm">+{mission.expReward} EXP</Badge>
+
+                    <button
+                      onClick={() => setEditingMission(mission)}
+                      className="p-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
+                      title="แก้ไขภารกิจ"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
 
                     <fetcher.Form method="post">
                       <input type="hidden" name="intent" value="delete" />

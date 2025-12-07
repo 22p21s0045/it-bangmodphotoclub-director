@@ -209,6 +209,18 @@ export class MissionsService {
     return { success: true, message: 'Mission deleted' };
   }
 
+  async updateMission(id: string, data: { title?: string; description?: string; expReward?: number; type?: string }) {
+    return this.prisma.mission.update({
+      where: { id },
+      data: {
+        ...(data.title && { title: data.title }),
+        ...(data.description && { description: data.description }),
+        ...(data.expReward && { expReward: data.expReward }),
+        ...(data.type && { type: data.type as any }),
+      },
+    });
+  }
+
   // Auto-check and complete missions based on user stats
   async checkAndCompleteMissions(userId: string) {
     // Get user stats
