@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
 import { History, UserPlus, UserMinus, Upload, Trash2, Settings, RefreshCw, ChevronDown } from "lucide-react";
@@ -13,6 +13,11 @@ interface EventChangelogProps {
   eventId: string;
 }
 
+interface AggregatedActivity extends EventActivityLog {
+  count?: number;
+  photoTypes?: { RAW: number; EDITED: number };
+}
+
 const actionConfig: Record<string, { icon: typeof UserPlus; label: string; color: string }> = {
   USER_JOINED: { icon: UserPlus, label: "เข้าร่วมกิจกรรม", color: "text-green-500" },
   USER_LEFT: { icon: UserMinus, label: "ถอนตัวจากกิจกรรม", color: "text-red-500" },
@@ -21,6 +26,71 @@ const actionConfig: Record<string, { icon: typeof UserPlus; label: string; color
   STATUS_CHANGED: { icon: RefreshCw, label: "เปลี่ยนสถานะ", color: "text-purple-500" },
   EVENT_UPDATED: { icon: Settings, label: "แก้ไขกิจกรรม", color: "text-gray-500" },
 };
+
+// Aggregate consecutive photo activities from same user within 5 minutes
+function aggregateActivities(activities: EventActivityLog[]): AggregatedActivity[] {
+  if (activities.length === 0) return [];
+  
+  const result: AggregatedActivity[] = [];
+  let currentGroup: AggregatedActivity | null = null;
+  
+  for (const activity of activities) {
+    const isPhotoAction = activity.action === 'PHOTO_UPLOADED' || activity.action === 'PHOTO_DELETED';
+    
+    if (!isPhotoAction) {
+      // Not a photo action, flush current group and add this one
+      if (currentGroup) {
+        result.push(currentGroup);
+        currentGroup = null;
+      }
+      result.push({ ...activity });
+      continue;
+    }
+    
+    // It's a photo action - check if we can merge with current group
+    if (currentGroup && 
+        currentGroup.action === activity.action &&
+        currentGroup.userId === activity.userId) {
+      // Check time difference (5 minutes = 300000ms)
+      const timeDiff = Math.abs(
+        new Date(currentGroup.createdAt).getTime() - new Date(activity.createdAt).getTime()
+      );
+      
+      if (timeDiff <= 300000) {
+        // Merge into current group
+        currentGroup.count = (currentGroup.count || 1) + 1;
+        const photoType = (activity.details as Record<string, unknown>)?.type as string;
+        if (photoType && currentGroup.photoTypes) {
+          if (photoType === 'RAW') currentGroup.photoTypes.RAW++;
+          else if (photoType === 'EDITED') currentGroup.photoTypes.EDITED++;
+        }
+        continue;
+      }
+    }
+    
+    // Can't merge - flush current group and start new one
+    if (currentGroup) {
+      result.push(currentGroup);
+    }
+    
+    const photoType = (activity.details as Record<string, unknown>)?.type as string;
+    currentGroup = { 
+      ...activity, 
+      count: 1,
+      photoTypes: { 
+        RAW: photoType === 'RAW' ? 1 : 0, 
+        EDITED: photoType === 'EDITED' ? 1 : 0 
+      }
+    };
+  }
+  
+  // Don't forget the last group
+  if (currentGroup) {
+    result.push(currentGroup);
+  }
+  
+  return result;
+}
 
 export function EventChangelog({ eventId }: EventChangelogProps) {
   const [activities, setActivities] = useState<EventActivityLog[]>([]);
@@ -44,7 +114,10 @@ export function EventChangelog({ eventId }: EventChangelogProps) {
     }
   }, [eventId, isOpen, activities.length]);
 
-  const getActionDetails = (activity: EventActivityLog) => {
+  // Aggregate photo activities
+  const aggregatedActivities = useMemo(() => aggregateActivities(activities), [activities]);
+
+  const getActionDetails = (activity: AggregatedActivity) => {
     const config = actionConfig[activity.action] || { 
       icon: History, 
       label: activity.action, 
@@ -52,10 +125,19 @@ export function EventChangelog({ eventId }: EventChangelogProps) {
     };
     
     let details = "";
-    if (activity.details) {
+    
+    // For aggregated photo actions, show count
+    if (activity.count && activity.count > 1) {
+      details = ` ${activity.count} รูป`;
+      if (activity.photoTypes) {
+        const types: string[] = [];
+        if (activity.photoTypes.RAW > 0) types.push(`RAW ${activity.photoTypes.RAW}`);
+        if (activity.photoTypes.EDITED > 0) types.push(`แต่งแล้ว ${activity.photoTypes.EDITED}`);
+        if (types.length > 0) details += ` (${types.join(', ')})`;
+      }
+    } else if (activity.details) {
       const d = activity.details as Record<string, unknown>;
-      if (d.filename) details = ` (${d.filename})`;
-      if (d.type) details += ` [${d.type}]`;
+      if (d.type) details = ` [${d.type === 'EDITED' ? 'แต่งแล้ว' : d.type}]`;
     }
     
     return { ...config, details };
@@ -92,14 +174,14 @@ export function EventChangelog({ eventId }: EventChangelogProps) {
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                 </div>
-              ) : activities.length === 0 ? (
+              ) : aggregatedActivities.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <History className="w-12 h-12 mx-auto mb-2 opacity-20" />
                   <p>ยังไม่มีประวัติกิจกรรม</p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {activities.map((activity) => {
+                  {aggregatedActivities.map((activity) => {
                     const { icon: Icon, label, color, details } = getActionDetails(activity);
                     
                     return (
