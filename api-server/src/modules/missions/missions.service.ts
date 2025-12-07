@@ -163,14 +163,36 @@ export class MissionsService {
     };
   }
 
-  async createMission(data: { title: string; description: string; expReward: number }) {
+  async createMission(data: { title: string; description: string; expReward: number; type?: string }) {
     return this.prisma.mission.create({
       data: {
         title: data.title,
         description: data.description,
         expReward: data.expReward,
+        type: (data.type as any) || 'MANUAL',
       },
     });
+  }
+
+  async fixMissionTypes() {
+    const missions = await this.prisma.mission.findMany();
+    
+    for (const mission of missions) {
+      let newType = 'MANUAL';
+      
+      if (mission.description.includes('รูป')) {
+        newType = 'AUTO_PHOTO';
+      } else if (mission.description.includes('ครั้ง')) {
+        newType = 'AUTO_JOIN';
+      }
+
+      await this.prisma.mission.update({
+        where: { id: mission.id },
+        data: { type: newType as any },
+      });
+    }
+
+    return { success: true, message: 'Fixed all mission types' };
   }
 
   // Auto-check and complete missions based on user stats

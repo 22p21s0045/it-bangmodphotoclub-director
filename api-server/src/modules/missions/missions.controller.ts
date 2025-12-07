@@ -31,7 +31,12 @@ export class MissionsController {
   }
 
   @Post()
-  createMission(@Body() data: { title: string; description: string; expReward: number }) {
+  createMission(@Body() data: { title: string; description: string; expReward: number; type?: string }) {
     return this.missionsService.createMission(data);
+  }
+
+  @Post('fix-types')
+  async fixMissionTypes() {
+    return this.missionsService.fixMissionTypes();
   }
 }
