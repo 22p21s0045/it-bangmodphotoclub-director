@@ -1,9 +1,10 @@
 import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { MinioService } from '../minio/minio.service';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, EventAction } from '@prisma/client';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { CreatePhotoDto } from './dto/create-photo.dto';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class PhotosService {
@@ -13,6 +14,7 @@ export class PhotosService {
   constructor(
     private readonly minioService: MinioService,
     @InjectQueue('image-processing') private imageQueue: Queue,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   async generatePresignedUrl(filename: string, eventId: string, userId: string) {
@@ -73,6 +75,14 @@ export class PhotosService {
       photoId: photo.id,
       fileKey: relativePath,
     });
+
+    // Log the upload activity
+    await this.activityLogService.logActivity(
+      createPhotoDto.eventId,
+      createPhotoDto.userId,
+      EventAction.PHOTO_UPLOADED,
+      { photoId: photo.id, filename: createPhotoDto.filename, type: photoType },
+    );
 
     this.logger.log(`Photo created with ID: ${photo.id}, queued for processing`);
     return photo;
@@ -168,6 +178,14 @@ export class PhotosService {
         }
       }
     }
+
+    // Log the delete activity
+    await this.activityLogService.logActivity(
+      photo.eventId,
+      userId,
+      EventAction.PHOTO_DELETED,
+      { photoId: id, filename: photo.filename, type: photo.type },
+    );
 
     this.logger.log(`Photo ${id} deleted by user ${userId}`);
     return { message: 'ลบรูปภาพสำเร็จ' };

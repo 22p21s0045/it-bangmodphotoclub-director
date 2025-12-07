@@ -1,15 +1,19 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { PrismaClient, Prisma, EventStatus } from '@prisma/client';
+import { PrismaClient, Prisma, EventStatus, EventAction } from '@prisma/client';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { MinioService } from '../minio/minio.service';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 import * as archiver from 'archiver';
 
 @Injectable()
 export class EventsService {
   private prisma = new PrismaClient();
 
-  constructor(private readonly minioService: MinioService) {}
+  constructor(
+    private readonly minioService: MinioService,
+    private readonly activityLogService: ActivityLogService,
+  ) {}
 
   create(data: CreateEventDto) {
     const eventData: Prisma.EventCreateInput = {
@@ -192,6 +196,14 @@ export class EventsService {
       },
     });
 
+    // Log the join activity
+    await this.activityLogService.logActivity(
+      eventId,
+      userId,
+      EventAction.USER_JOINED,
+      null,
+    );
+
     // Check if limit reached after join or if it's an unlimited event with at least one participant
     const currentParticipants = event.joins.length + 1;
     const isLimitReached = event.joinLimit > 0 && currentParticipants >= event.joinLimit;
@@ -230,6 +242,14 @@ export class EventsService {
         },
       },
     });
+
+    // Log the leave activity
+    await this.activityLogService.logActivity(
+      eventId,
+      userId,
+      EventAction.USER_LEFT,
+      null,
+    );
 
     // Check if we need to revert event status
     const event = await this.prisma.event.findUnique({

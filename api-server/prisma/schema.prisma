@@ -18,11 +18,12 @@ model User {
   isActive  Boolean     @default(true)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
-  auditLogs AuditLog[]
-  joins     JoinEvent[]
-  photos    Photo[]
-  badges    UserBadge[]
-  level     UserLevel?
+  auditLogs     AuditLog[]
+  joins          JoinEvent[]
+  photos         Photo[]
+  badges         UserBadge[]
+  level          UserLevel?
+  activityLogs   EventActivityLog[]
 }
 
 model Event {
@@ -40,6 +41,7 @@ model Event {
   status             EventStatus @default(UPCOMING)
   joins              JoinEvent[]
   photos             Photo[]
+  activityLogs       EventActivityLog[]
 }
 
 model JoinEvent {
@@ -128,4 +130,24 @@ enum EventStatus {
   PENDING_RAW
   PENDING_EDIT
   COMPLETED
+}
+
+enum EventAction {
+  USER_JOINED
+  USER_LEFT
+  PHOTO_UPLOADED
+  PHOTO_DELETED
+  STATUS_CHANGED
+  EVENT_UPDATED
+}
+
+model EventActivityLog {
+  id        String      @id @default(uuid())
+  eventId   String
+  userId    String?
+  action    EventAction
+  details   Json?
+  createdAt DateTime    @default(now())
+  event     Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User?       @relation(fields: [userId], references: [id])
 }

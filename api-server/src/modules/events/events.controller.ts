@@ -3,10 +3,14 @@ import { Response } from 'express';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly activityLogService: ActivityLogService,
+  ) {}
 
   @Post()
   create(@Body() createEventDto: CreateEventDto) {
@@ -32,6 +36,11 @@ export class EventsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventsService.findOne(id);
+  }
+
+  @Get(':id/activities')
+  getActivities(@Param('id') id: string, @Query('limit') limit: number = 50) {
+    return this.activityLogService.getEventActivities(id, Number(limit));
   }
 
   @Patch(':id')

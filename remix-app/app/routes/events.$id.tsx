@@ -24,6 +24,7 @@ import { Badge } from "~/components/ui/badge";
 import { sessionStorage } from "~/session.server";
 import { PageTransition } from "~/components/page-transition";
 import { DeleteEventDialog } from "~/components/delete-event-dialog";
+import { EventChangelog } from "~/components/event-changelog";
 import {
   Dialog,
   DialogContent,
@@ -615,6 +616,9 @@ export default function EventDetail() {
                     )}
                   </AnimatePresence>
                 </Card>
+
+                {/* Changelog Section */}
+                <EventChangelog eventId={resolvedEvent.id} />
 
                 {/* Upload RAW Dialog */}
                 <UploadRawDialog

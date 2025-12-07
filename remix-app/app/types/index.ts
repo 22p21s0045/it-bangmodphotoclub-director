@@ -137,3 +137,24 @@ export interface CroppedAreaPixels {
   width: number;
   height: number;
 }
+
+// ============ Activity Log Types ============
+
+export enum EventAction {
+  USER_JOINED = "USER_JOINED",
+  USER_LEFT = "USER_LEFT",
+  PHOTO_UPLOADED = "PHOTO_UPLOADED",
+  PHOTO_DELETED = "PHOTO_DELETED",
+  STATUS_CHANGED = "STATUS_CHANGED",
+  EVENT_UPDATED = "EVENT_UPDATED",
+}
+
+export interface EventActivityLog {
+  id: string;
+  eventId: string;
+  userId?: string | null;
+  action: EventAction | string;
+  details?: Record<string, unknown> | null;
+  createdAt: string | Date;
+  user?: Pick<User, 'id' | 'name' | 'avatar'> | null;
+}
