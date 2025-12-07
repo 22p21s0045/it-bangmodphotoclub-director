@@ -103,13 +103,6 @@ export default function AdminDashboard() {
       description: formatBytes(stats.photoStats.totalStorageBytes),
       color: "text-purple-500",
     },
-    {
-      title: "ชั่วโมงกิจกรรม",
-      value: stats.overview.totalActivityHours,
-      icon: Clock,
-      description: "จากกิจกรรมที่เสร็จสิ้น",
-      color: "text-orange-500",
-    },
   ];
 
   return (
@@ -122,7 +115,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {overviewCards.map((card) => (
             <Card key={card.title}>
               <CardContent className="pt-6">
@@ -139,8 +132,8 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Middle Row: Photo Stats + Leaderboards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Middle Row: Photo Stats + Leaderboard */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Photo Stats */}
           <Card>
             <CardHeader>
@@ -207,39 +200,6 @@ export default function AdminDashboard() {
                         <p className="text-sm font-medium truncate">{item.user?.name || "Unknown"}</p>
                       </div>
                       <Badge variant="secondary">{item.eventCount} งาน</Badge>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-4">ยังไม่มีข้อมูล</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Top Photographers */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Camera className="w-5 h-5 text-blue-500" />
-                Top 5 ช่างภาพ
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {stats.topPhotographers.length > 0 ? (
-                <div className="space-y-3">
-                  {stats.topPhotographers.map((item, index) => (
-                    <div key={item.user?.id || index} className="flex items-center gap-3">
-                      <span className={`text-lg font-bold w-6 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-600' : 'text-muted-foreground'}`}>
-                        {index + 1}
-                      </span>
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={item.user?.avatar || undefined} />
-                        <AvatarFallback>{item.user?.name?.charAt(0) || "U"}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.user?.name || "Unknown"}</p>
-                      </div>
-                      <Badge variant="secondary">{item.photoCount} รูป</Badge>
                     </div>
                   ))}
                 </div>
