@@ -56,8 +56,8 @@ export class PhotosService {
         });
         this.logger.log(`Event ${createPhotoDto.eventId} status updated to PENDING_EDIT`);
       }
-      // EDITED photo uploaded -> change PENDING_EDIT to COMPLETED
-      else if (photoType === 'EDITED' && event.status === 'PENDING_EDIT') {
+      // EDITED photo uploaded -> always set to COMPLETED (skip RAW step if needed)
+      else if (photoType === 'EDITED' && event.status !== 'COMPLETED') {
         await this.prisma.event.update({
           where: { id: createPhotoDto.eventId },
           data: { status: 'COMPLETED' },
@@ -123,6 +123,54 @@ export class PhotosService {
 
     // Delete from database
     await this.prisma.photo.delete({ where: { id } });
+
+    // Update event status if needed
+    if (photo.eventId) {
+      const event = await this.prisma.event.findUnique({
+        where: { id: photo.eventId },
+      });
+
+      // If EDITED photo deleted, check if any EDITED photos remain
+      if (photo.type === 'EDITED') {
+        const remainingEditedPhotos = await this.prisma.photo.count({
+          where: {
+            eventId: photo.eventId,
+            type: 'EDITED',
+          },
+        });
+
+        // If no EDITED photos remain and event is COMPLETED, revert to PENDING_EDIT
+        if (remainingEditedPhotos === 0 && event?.status === 'COMPLETED') {
+          await this.prisma.event.update({
+            where: { id: photo.eventId },
+            data: { status: 'PENDING_EDIT' },
+          });
+          this.logger.log(`Event ${photo.eventId} status reverted to PENDING_EDIT (no EDITED photos remaining)`);
+        }
+      }
+      
+      // If RAW photo deleted, check if any RAW photos remain
+      if (photo.type === 'RAW' || !photo.type) {
+        const remainingRawPhotos = await this.prisma.photo.count({
+          where: {
+            eventId: photo.eventId,
+            OR: [
+              { type: 'RAW' },
+              { type: null },
+            ],
+          },
+        });
+
+        // If no RAW photos remain and event is PENDING_EDIT, revert to PENDING_RAW
+        if (remainingRawPhotos === 0 && event?.status === 'PENDING_EDIT') {
+          await this.prisma.event.update({
+            where: { id: photo.eventId },
+            data: { status: 'PENDING_RAW' },
+          });
+          this.logger.log(`Event ${photo.eventId} status reverted to PENDING_RAW (no RAW photos remaining)`);
+        }
+      }
+    }
 
     this.logger.log(`Photo ${id} deleted by user ${userId}`);
     return { message: 'ลบรูปภาพสำเร็จ' };
