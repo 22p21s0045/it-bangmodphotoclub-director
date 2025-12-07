@@ -30,6 +30,16 @@ export const loader = async ({ request }: { request: Request }) => {
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+
+const contextClass: Record<string, string> = {
+  success: "bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100 border-green-200 dark:border-green-800",
+  error: "bg-red-50 text-red-900 dark:bg-red-900/20 dark:text-red-100 border-red-200 dark:border-red-800",
+  info: "bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100 border-blue-200 dark:border-blue-800",
+  warning: "bg-orange-50 text-orange-900 dark:bg-orange-900/20 dark:text-orange-100 border-orange-200 dark:border-orange-800",
+  default: "bg-background text-foreground border-border",
+  dark: "bg-background text-foreground border-border",
+};
+
 export default function App() {
   return (
     <html lang="th">
@@ -45,7 +55,23 @@ export default function App() {
             <Outlet />
           </Layout>
         </QueryProvider>
-        <ToastContainer position="top-right" autoClose={3000} />
+        <ToastContainer 
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={true}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+          toastClassName={(context) => 
+            contextClass[context?.type || "default"] + 
+            " relative flex p-4 min-h-12 rounded-xl justify-between overflow-hidden cursor-pointer shadow-lg border backdrop-blur-md mb-4 items-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          }
+          bodyClassName={() => "text-sm font-medium flex-1"}
+        />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
