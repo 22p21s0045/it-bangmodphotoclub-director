@@ -195,6 +195,20 @@ export class MissionsService {
     return { success: true, message: 'Fixed all mission types' };
   }
 
+  async deleteMission(id: string) {
+    // First delete all user completions for this mission
+    await this.prisma.userMission.deleteMany({
+      where: { missionId: id },
+    });
+
+    // Then delete the mission
+    await this.prisma.mission.delete({
+      where: { id },
+    });
+
+    return { success: true, message: 'Mission deleted' };
+  }
+
   // Auto-check and complete missions based on user stats
   async checkAndCompleteMissions(userId: string) {
     // Get user stats

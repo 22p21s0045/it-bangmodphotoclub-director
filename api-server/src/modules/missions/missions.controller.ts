@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
 import { MissionsService } from './missions.service';
 
 @Controller('missions')
@@ -38,5 +38,10 @@ export class MissionsController {
   @Post('fix-types')
   async fixMissionTypes() {
     return this.missionsService.fixMissionTypes();
+  }
+
+  @Delete(':id')
+  deleteMission(@Param('id') id: string) {
+    return this.missionsService.deleteMission(id);
   }
 }
