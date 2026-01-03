@@ -52,34 +52,13 @@ export function EventStatusStepper({ currentStatus, className }: EventStatusStep
 
   const currentStepIndex = getCurrentStepIndex(currentStatus);
 
-  const getStepColors = (color: string, isActive: boolean) => {
-    const colors: Record<string, { bg: string; border: string; text: string; glow: string }> = {
-      blue: {
-        bg: isActive ? "bg-blue-500" : "bg-blue-100 dark:bg-blue-900/30",
-        border: "border-blue-500",
-        text: "text-blue-600 dark:text-blue-400",
-        glow: "shadow-blue-500/30",
-      },
-      orange: {
-        bg: isActive ? "bg-orange-500" : "bg-orange-100 dark:bg-orange-900/30",
-        border: "border-orange-500",
-        text: "text-orange-600 dark:text-orange-400",
-        glow: "shadow-orange-500/30",
-      },
-      purple: {
-        bg: isActive ? "bg-purple-500" : "bg-purple-100 dark:bg-purple-900/30",
-        border: "border-purple-500",
-        text: "text-purple-600 dark:text-purple-400",
-        glow: "shadow-purple-500/30",
-      },
-      green: {
-        bg: isActive ? "bg-green-500" : "bg-green-100 dark:bg-green-900/30",
-        border: "border-green-500",
-        text: "text-green-600 dark:text-green-400",
-        glow: "shadow-green-500/30",
-      },
+  const getStepColors = (isActive: boolean) => {
+    return {
+      bg: isActive ? "bg-primary" : "bg-muted",
+      border: "border-primary",
+      text: isActive ? "text-primary" : "text-muted-foreground",
+      glow: "shadow-primary/30",
     };
-    return colors[color] || colors.blue;
   };
 
   return (
@@ -87,11 +66,11 @@ export function EventStatusStepper({ currentStatus, className }: EventStatusStep
       {/* Desktop View */}
       <div className="hidden md:flex items-start justify-between relative px-8">
         {/* Progress Line Background */}
-        <div className="absolute top-6 left-[60px] right-[60px] h-1 bg-muted rounded-full" />
+        <div className="absolute top-6 left-[60px] right-[60px] h-0.5 bg-muted rounded-full" />
         
         {/* Progress Line Fill */}
         <div 
-          className="absolute top-6 left-[60px] h-1 bg-gradient-to-r from-blue-500 via-orange-500 to-green-500 rounded-full transition-all duration-700 ease-out"
+          className="absolute top-6 left-[60px] h-0.5 bg-primary rounded-full transition-all duration-700 ease-out"
           style={{ 
             width: `${(currentStepIndex / (steps.length - 1)) * (100 - (120 / 8))}%`,
             maxWidth: 'calc(100% - 120px)'
@@ -102,17 +81,17 @@ export function EventStatusStepper({ currentStatus, className }: EventStatusStep
           const isCompleted = index < currentStepIndex;
           const isCurrent = index === currentStepIndex;
           const Icon = step.icon;
-          const colors = getStepColors(step.color, isCompleted || isCurrent);
+          const colors = getStepColors(isCompleted || isCurrent);
 
           return (
             <div key={step.id} className="flex flex-col items-center relative z-10 flex-1">
               {/* Icon Circle */}
               <div
                 className={cn(
-                  "relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-500 ease-out",
+                  "relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-500 ease-out border-2",
                   isCompleted || isCurrent
-                    ? `${colors.bg} text-white shadow-lg ${colors.glow}`
-                    : "bg-muted text-muted-foreground"
+                    ? `${colors.bg} text-primary-foreground border-primary shadow-lg ${colors.glow}`
+                    : "bg-background border-muted text-muted-foreground"
                 )}
               >
                 {/* Pulse for current */}
@@ -134,7 +113,7 @@ export function EventStatusStepper({ currentStatus, className }: EventStatusStep
               <div className="mt-3 text-center">
                 <div className={cn(
                   "font-semibold text-sm transition-colors duration-300",
-                  isCompleted || isCurrent ? colors.text : "text-muted-foreground"
+                  isCompleted || isCurrent ? "text-foreground" : "text-muted-foreground"
                 )}>
                   {step.label}
                 </div>
@@ -146,9 +125,7 @@ export function EventStatusStepper({ currentStatus, className }: EventStatusStep
                 </div>
                 {isCurrent && (
                   <div className={cn(
-                    "mt-1.5 text-xs font-medium px-2 py-0.5 rounded-full inline-block",
-                    colors.bg,
-                    "text-white"
+                    "mt-1.5 text-xs font-medium px-2 py-0.5 rounded-full inline-block bg-primary text-primary-foreground"
                   )}>
                     กำลังดำเนินการ
                   </div>
@@ -166,7 +143,7 @@ export function EventStatusStepper({ currentStatus, className }: EventStatusStep
           const isCurrent = index === currentStepIndex;
           const isLast = index === steps.length - 1;
           const Icon = step.icon;
-          const colors = getStepColors(step.color, isCompleted || isCurrent);
+          const colors = getStepColors(isCompleted || isCurrent);
 
           return (
             <div key={step.id} className="relative flex items-start gap-4">
@@ -176,7 +153,7 @@ export function EventStatusStepper({ currentStatus, className }: EventStatusStep
                   <div 
                     className={cn(
                       "w-full transition-all duration-500",
-                      index < currentStepIndex ? "h-full bg-gradient-to-b from-blue-500 to-green-500" : "h-0"
+                      index < currentStepIndex ? "h-full bg-primary" : "h-0"
                     )}
                   />
                 </div>
@@ -185,10 +162,10 @@ export function EventStatusStepper({ currentStatus, className }: EventStatusStep
               {/* Icon */}
               <div
                 className={cn(
-                  "relative flex items-center justify-center w-12 h-12 rounded-full flex-shrink-0 transition-all duration-500",
+                  "relative flex items-center justify-center w-12 h-12 rounded-full flex-shrink-0 transition-all duration-500 border-2",
                   isCompleted || isCurrent
-                    ? `${colors.bg} text-white shadow-md ${colors.glow}`
-                    : "bg-muted text-muted-foreground"
+                    ? `${colors.bg} text-primary-foreground border-primary shadow-md ${colors.glow}`
+                    : "bg-background border-muted text-muted-foreground"
                 )}
               >
                 {isCurrent && (
@@ -201,7 +178,7 @@ export function EventStatusStepper({ currentStatus, className }: EventStatusStep
               <div className={cn("flex-1 pb-6", isLast && "pb-0")}>
                 <div className={cn(
                   "font-semibold transition-colors",
-                  isCompleted || isCurrent ? colors.text : "text-muted-foreground"
+                  isCompleted || isCurrent ? "text-foreground" : "text-muted-foreground"
                 )}>
                   {step.label}
                 </div>
@@ -210,9 +187,7 @@ export function EventStatusStepper({ currentStatus, className }: EventStatusStep
                 </div>
                 {isCurrent && (
                   <span className={cn(
-                    "inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full",
-                    colors.bg,
-                    "text-white"
+                    "inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground"
                   )}>
                     กำลังดำเนินการ
                   </span>
