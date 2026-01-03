@@ -102,7 +102,7 @@ export default function EventDetail() {
   return (
     <PageTransition className="min-h-screen bg-muted/30">
       {/* Modern Header with Stepper */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm">
+      <div className="z-10 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm">
         <div className="container mx-auto px-4">
           {/* Back Button Row */}
           <div className="py-3 flex items-center">
