@@ -279,7 +279,7 @@ export default function AdminDashboard() {
               กิจกรรมล่าสุด
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="max-h-80 overflow-y-auto">
             {stats.recentActivities.length > 0 ? (
               <div className="space-y-4">
                 {stats.recentActivities.map((activity) => {
