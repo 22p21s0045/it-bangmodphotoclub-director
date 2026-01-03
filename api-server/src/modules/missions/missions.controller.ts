@@ -1,9 +1,15 @@
 import { Controller, Get, Post, Delete, Patch, Param, Body } from '@nestjs/common';
+import { MissionType } from '@prisma/client';
 import { MissionsService } from './missions.service';
+import { RankService, MissionCompletionService } from './services';
 
 @Controller('missions')
 export class MissionsController {
-  constructor(private readonly missionsService: MissionsService) {}
+  constructor(
+    private readonly missionsService: MissionsService,
+    private readonly rankService: RankService,
+    private readonly completionService: MissionCompletionService,
+  ) {}
 
   @Get()
   getAllMissions() {
@@ -13,13 +19,13 @@ export class MissionsController {
   @Get('user/:userId')
   async getUserMissions(@Param('userId') userId: string) {
     // Auto-check and complete missions based on current stats
-    await this.missionsService.checkAndCompleteMissions(userId);
-    return this.missionsService.getUserMissions(userId);
+    await this.completionService.checkAndCompleteMissions(userId);
+    return this.completionService.getUserMissionsWithProgress(userId);
   }
 
   @Get('rank/:userId')
   getUserRank(@Param('userId') userId: string) {
-    return this.missionsService.getUserRank(userId);
+    return this.rankService.getUserRank(userId);
   }
 
   @Post(':missionId/complete/:userId')
@@ -27,11 +33,16 @@ export class MissionsController {
     @Param('missionId') missionId: string,
     @Param('userId') userId: string,
   ) {
-    return this.missionsService.completeMission(userId, missionId);
+    return this.completionService.completeMission(userId, missionId);
   }
 
   @Post()
-  createMission(@Body() data: { title: string; description: string; expReward: number; type?: string }) {
+  createMission(@Body() data: { 
+    title: string; 
+    description: string; 
+    expReward: number; 
+    type?: MissionType;
+  }) {
     return this.missionsService.createMission(data);
   }
 
@@ -48,7 +59,12 @@ export class MissionsController {
   @Patch(':id')
   updateMission(
     @Param('id') id: string,
-    @Body() data: { title?: string; description?: string; expReward?: number; type?: string },
+    @Body() data: { 
+      title?: string; 
+      description?: string; 
+      expReward?: number; 
+      type?: MissionType;
+    },
   ) {
     return this.missionsService.updateMission(id, data);
   }
