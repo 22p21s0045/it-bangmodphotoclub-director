@@ -31,7 +31,7 @@ const generalItems = [
 
 const adminItems = [
   {
-    title: "Dashboard",
+    title: "เเดชบอร์ด",
     href: "/admin/dashboard",
     icon: LayoutDashboard,
   },
