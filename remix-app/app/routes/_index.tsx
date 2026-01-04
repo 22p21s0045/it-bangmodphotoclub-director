@@ -59,29 +59,13 @@ export default function Index() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {albums.map((album: Album) => (
-              <div key={album.id} className="relative group">
-                <AlbumCard 
-                  album={album} 
-                  onClick={() => {
-                    navigate(`/albums/${album.id}`);
-                  }} 
-                />
-                
-                {/* Overlay Button for Add Photos */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
-                      className="h-8 shadow-md"
-                      onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedAlbumId(album.id);
-                      }}
-                    >
-                      <Plus className="w-3 h-3 mr-1" /> เพิ่มรูป
-                    </Button>
-                </div>
-              </div>
+              <AlbumCard 
+                key={album.id}
+                album={album} 
+                onClick={() => {
+                  navigate(`/albums/${album.id}`);
+                }} 
+              />
             ))}
           </div>
         )}
