@@ -24,6 +24,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export default function Index() {
   const { albums } = useLoaderData<typeof loader>();
   const revalidator = useRevalidator();
+  const navigate = useNavigate();
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
 
   const handleRefresh = () => {
@@ -62,7 +63,7 @@ export default function Index() {
                 <AlbumCard 
                   album={album} 
                   onClick={() => {
-                    // Navigate to album detail (future impl)
+                    navigate(`/albums/${album.id}`);
                   }} 
                 />
                 
