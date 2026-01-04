@@ -90,7 +90,7 @@ export class MissionsService {
     const missions = await this.prisma.mission.findMany();
 
     for (const mission of missions) {
-      let newType = MissionType.MANUAL;
+      let newType: MissionType = MissionType.MANUAL;
 
       if (mission.description.includes('รูป')) {
         newType = MissionType.AUTO_PHOTO;

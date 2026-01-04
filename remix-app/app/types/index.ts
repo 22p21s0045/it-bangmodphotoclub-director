@@ -158,3 +158,15 @@ export interface EventActivityLog {
   createdAt: string | Date;
   user?: Pick<User, 'id' | 'name' | 'avatar'> | null;
 }
+
+// ============ Album Types ============
+
+export interface Album {
+  id: string;
+  title: string;
+  description?: string | null;
+  isPublic: boolean;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  photos?: Photo[];
+}

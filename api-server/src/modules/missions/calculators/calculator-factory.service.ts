@@ -22,11 +22,12 @@ export class CalculatorFactoryService {
     private readonly eventCalculator: EventMissionCalculator,
     private readonly manualCalculator: ManualMissionCalculator,
   ) {
-    this.calculators = new Map([
+    const entries: [MissionType, IMissionProgressCalculator][] = [
       [MissionType.AUTO_PHOTO, this.photoCalculator],
       [MissionType.AUTO_JOIN, this.eventCalculator],
       [MissionType.MANUAL, this.manualCalculator],
-    ]);
+    ];
+    this.calculators = new Map(entries);
   }
 
   /**

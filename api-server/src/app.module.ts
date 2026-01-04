@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MissionsModule } from './modules/missions/missions.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
+import { AlbumsModule } from './modules/albums/albums.module';
 import { ImageWorker } from './queue/image.worker';
 
 @Module({
@@ -33,6 +34,7 @@ import { ImageWorker } from './queue/image.worker';
     AuthModule,
     DashboardModule,
     MissionsModule,
+    AlbumsModule,
   ],
   controllers: [],
   providers: [ImageWorker],

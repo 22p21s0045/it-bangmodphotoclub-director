@@ -27,6 +27,16 @@ model User {
   missions       UserMission[]
 }
 
+model Album {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  photos      Photo[]
+}
+
 model Event {
   id                 String      @id @default(uuid())
   title              String
@@ -74,6 +84,7 @@ model Photo {
   eventId      String
   event        Event     @relation(fields: [eventId], references: [id])
   user         User      @relation(fields: [userId], references: [id])
+  albums       Album[]
 }
 
 enum PhotoType {
