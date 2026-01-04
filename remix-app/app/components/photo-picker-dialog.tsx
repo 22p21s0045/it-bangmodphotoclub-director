@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import { Check, Image as ImageIcon, Loader2, Search } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "~/components/ui/toggle-group";
+import { Check, Image as ImageIcon, Loader2, Search, ImageOff, Sparkles } from "lucide-react";
 import axios from "axios";
 import { cn } from "~/lib/utils";
-import type { Event, Photo } from "~/types";
+import type { Event, Photo, PhotoType } from "~/types";
 
 interface PhotoPickerDialogProps {
   albumId: string;
@@ -41,8 +42,15 @@ export function PhotoPickerDialog({ albumId, trigger, onSuccess, isOpen, onClose
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
+  const [photoTypeFilter, setPhotoTypeFilter] = useState<"ALL" | "RAW" | "EDITED">("ALL");
   
   const [submitting, setSubmitting] = useState(false);
+
+  // Filter photos based on selected type
+  const filteredPhotos = useMemo(() => {
+    if (photoTypeFilter === "ALL") return photos;
+    return photos.filter(photo => photo.type === photoTypeFilter);
+  }, [photos, photoTypeFilter]);
 
   // Fetch events when dialog opens
   useEffect(() => {
@@ -92,10 +100,15 @@ export function PhotoPickerDialog({ albumId, trigger, onSuccess, isOpen, onClose
   };
 
   const toggleAll = () => {
-    if (selectedPhotoIds.length === photos.length) {
-      setSelectedPhotoIds([]);
+    const filteredIds = filteredPhotos.map(p => p.id);
+    const allFilteredSelected = filteredIds.every(id => selectedPhotoIds.includes(id));
+    
+    if (allFilteredSelected) {
+      // Remove all filtered photos from selection
+      setSelectedPhotoIds(prev => prev.filter(id => !filteredIds.includes(id)));
     } else {
-      setSelectedPhotoIds(photos.map(p => p.id));
+      // Add all filtered photos to selection
+      setSelectedPhotoIds(prev => [...new Set([...prev, ...filteredIds])]);
     }
   };
 
@@ -169,8 +182,26 @@ export function PhotoPickerDialog({ albumId, trigger, onSuccess, isOpen, onClose
                   &larr; กลับไปเลือกกิจกรรม
                 </Button>
                 <Button variant="secondary" size="sm" onClick={toggleAll}>
-                  {selectedPhotoIds.length === photos.length ? "ยกเลิกเลือกทั้งหมด" : "เลือกทั้งหมด"}
+                  {filteredPhotos.every(p => selectedPhotoIds.includes(p.id)) && filteredPhotos.length > 0 ? "ยกเลิกเลือกทั้งหมด" : "เลือกทั้งหมด"}
                 </Button>
+              </div>
+              
+              {/* Photo Type Filter */}
+              <div className="flex items-center gap-3">
+                <Label className="text-sm text-muted-foreground">ประเภทรูป:</Label>
+                <ToggleGroup type="single" value={photoTypeFilter} onValueChange={(v: string) => v && setPhotoTypeFilter(v as "ALL" | "RAW" | "EDITED")}>
+                  <ToggleGroupItem value="ALL" aria-label="ทั้งหมด" className="text-xs px-3">
+                    ทั้งหมด ({photos.length})
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="RAW" aria-label="รูปยังไม่แต่ง" className="text-xs px-3">
+                    <ImageOff className="w-3 h-3 mr-1" />
+                    ยังไม่แต่ง ({photos.filter(p => p.type === "RAW").length})
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="EDITED" aria-label="รูปแต่งแล้ว" className="text-xs px-3">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    แต่งแล้ว ({photos.filter(p => p.type === "EDITED").length})
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
               
               <ScrollArea className="flex-1 border rounded-md p-4">
@@ -178,13 +209,13 @@ export function PhotoPickerDialog({ albumId, trigger, onSuccess, isOpen, onClose
                     <div className="flex items-center justify-center p-12">
                       <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
                     </div>
-                 ) : photos.length === 0 ? (
+                 ) : filteredPhotos.length === 0 ? (
                     <div className="text-center p-12 text-muted-foreground">
-                      ไม่มีรูปภาพในกิจกรรมนี้
+                      {photos.length === 0 ? "ไม่มีรูปภาพในกิจกรรมนี้" : "ไม่มีรูปภาพประเภทนี้"}
                     </div>
                  ) : (
                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                     {photos.map(photo => {
+                     {filteredPhotos.map(photo => {
                        const isSelected = selectedPhotoIds.includes(photo.id);
                        return (
                          <div 
