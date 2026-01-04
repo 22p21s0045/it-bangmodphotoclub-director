@@ -3,7 +3,17 @@ import { useLoaderData, useNavigate, useRevalidator } from "@remix-run/react";
 import axios from "axios";
 import { PageTransition } from "~/components/page-transition";
 import { Button } from "~/components/ui/button";
-import { ArrowLeft, Calendar, Check, Image as ImageIcon, Plus, Trash2, X } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
+import { ArrowLeft, Calendar, Check, Image as ImageIcon, Loader2, Plus, Trash2, X } from "lucide-react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { useState } from "react";
@@ -32,6 +42,7 @@ export default function AlbumDetailPage() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const photos = album.photos || [];
 
@@ -58,10 +69,6 @@ export default function AlbumDetailPage() {
 
   const handleDeleteSelected = async () => {
     if (selectedPhotoIds.length === 0) return;
-    
-    if (!confirm(`คุณต้องการลบ ${selectedPhotoIds.length} รูปออกจากอัลบั้มนี้?`)) {
-      return;
-    }
 
     setDeleting(true);
     try {
@@ -69,6 +76,7 @@ export default function AlbumDetailPage() {
       await axios.delete(`${backendUrl}/albums/${album.id}/photos`, {
         data: { photoIds: selectedPhotoIds }
       });
+      setShowDeleteConfirm(false);
       setSelectionMode(false);
       setSelectedPhotoIds([]);
       revalidator.revalidate();
@@ -121,8 +129,8 @@ export default function AlbumDetailPage() {
                 <Button 
                   variant="destructive" 
                   size="sm" 
-                  onClick={handleDeleteSelected}
-                  disabled={selectedPhotoIds.length === 0 || deleting}
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={selectedPhotoIds.length === 0}
                 >
                   <Trash2 className="w-4 h-4 mr-1" />
                   ลบ ({selectedPhotoIds.length})
@@ -242,6 +250,33 @@ export default function AlbumDetailPage() {
             }}
           />
         )}
+
+        {/* Delete Confirmation Modal */}
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>ยืนยันการลบรูปภาพ</AlertDialogTitle>
+              <AlertDialogDescription>
+                คุณต้องการลบ {selectedPhotoIds.length} รูปออกจากอัลบั้มนี้หรือไม่?
+                <br />
+                <span className="text-muted-foreground text-xs mt-2 block">
+                  หมายเหตุ: รูปภาพจะถูกลบออกจากอัลบั้มเท่านั้น ไม่ได้ลบจากกิจกรรมต้นทาง
+                </span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>ยกเลิก</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteSelected}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                ลบรูปภาพ
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </PageTransition>
   );
