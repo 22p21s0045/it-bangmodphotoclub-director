@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
-import { ArrowLeft, Calendar, Check, Image as ImageIcon, Loader2, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, Calendar, Check, Image as ImageIcon, Loader2, MousePointerClick, Plus, Trash2, X } from "lucide-react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { useState } from "react";
@@ -140,8 +140,8 @@ export default function AlbumDetailPage() {
               <>
                 {photos.length > 0 && (
                   <Button variant="outline" onClick={() => setSelectionMode(true)}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    เลือกลบ
+                    <MousePointerClick className="w-4 h-4 mr-2" />
+                    เลือก
                   </Button>
                 )}
                 <Button onClick={() => setShowPhotoPicker(true)}>
