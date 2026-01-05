@@ -82,7 +82,7 @@ export function Sidebar() {
         ) : (
           <div className="flex items-center justify-center">
             <img 
-              src={mounted && theme === 'dark' ? "/logo-dark.svg" : "/logo.svg"} 
+              src={mounted && theme === 'dark' ? "/images/sidebar/logo-minimal-dark.png" : "/images/sidebar/logo-minimal-light.png"} 
               alt="Logo" 
               className="h-8 w-8 object-contain" 
             />
