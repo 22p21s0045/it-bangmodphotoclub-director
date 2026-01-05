@@ -223,7 +223,7 @@ export default function EventDetail() {
                                 }}
                               >
                                 <FileSpreadsheet className="w-4 h-4 mr-2" />
-                                Export Excel
+                                ดาวน์โหลดรายชื่อ
                               </Button>
                             )}
                             {user?.role === "ADMIN" && (

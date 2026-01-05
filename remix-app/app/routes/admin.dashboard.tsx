@@ -152,7 +152,7 @@ export default function AdminDashboard() {
               className="flex items-center gap-2 px-3 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <FileSpreadsheet className="w-4 h-4" />
-              Export Excel
+              ดาวน์โหลดรายชื่อกิจกรรม
             </button>
           </CardHeader>
           <CardContent>

@@ -154,7 +154,7 @@ export function EventChangelog({ eventId }: EventChangelogProps) {
           <CardTitle className="text-lg flex items-center gap-2 cursor-pointer">
             <ChevronDown className={`w-5 h-5 text-primary transition-transform duration-200 ${isOpen ? "" : "-rotate-90"}`} />
             <History className="w-5 h-5 text-primary" />
-            <span>ประวัติกิจกรรม</span>
+            <span>ความคืบหน้า</span>
           </CardTitle>
         </Button>
       </CardHeader>

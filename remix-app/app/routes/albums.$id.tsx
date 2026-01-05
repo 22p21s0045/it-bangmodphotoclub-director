@@ -20,6 +20,7 @@ import { useState } from "react";
 import { PhotoPickerDialog } from "~/components/photo-picker-dialog";
 import { cn } from "~/lib/utils";
 import type { Album, Photo } from "~/types";
+import { PhotoPreviewDialog } from "~/components/photo-preview-dialog";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { id } = params;
@@ -43,6 +44,7 @@ export default function AlbumDetailPage() {
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
   const photos = album.photos || [];
 
@@ -190,7 +192,13 @@ export default function AlbumDetailPage() {
                     selectionMode && "ring-2 ring-offset-2",
                     selectionMode && isSelected ? "ring-primary" : "ring-transparent"
                   )}
-                  onClick={() => selectionMode && togglePhoto(photo.id)}
+                  onClick={() => {
+                    if (selectionMode) {
+                      togglePhoto(photo.id);
+                    } else {
+                      setSelectedPhoto(photo);
+                    }
+                  }}
                 >
                   <img
                     src={photo.thumbnailUrl || photo.url}
@@ -250,6 +258,15 @@ export default function AlbumDetailPage() {
             }}
           />
         )}
+
+        {/* Photo Preview Dialog */}
+        <PhotoPreviewDialog
+          photo={selectedPhoto}
+          photos={photos}
+          open={!!selectedPhoto}
+          onOpenChange={(open: boolean) => !open && setSelectedPhoto(null)}
+          onPhotoChange={setSelectedPhoto}
+        />
 
         {/* Delete Confirmation Modal */}
         <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
