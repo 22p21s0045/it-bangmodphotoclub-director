@@ -1,10 +1,9 @@
 import { Link, useLocation, useRouteLoaderData } from "@remix-run/react";
-import { Album, Calendar, ChevronLeft, ChevronRight, LayoutDashboard, List, Target, Users } from "lucide-react";
+import { Album, Calendar, LayoutDashboard, List, Target, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { User } from "~/types";
 import { cn } from "~/lib/utils";
 import { useTheme } from "~/store/useTheme";
-import { Button } from "./ui/button";
 
 const generalItems = [
   {
@@ -49,7 +48,7 @@ const adminItems = [
 
 export function Sidebar() {
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const data = useRouteLoaderData("root") as { user: User | null };
   const user = data?.user;
   const { theme } = useTheme();
@@ -59,15 +58,20 @@ export function Sidebar() {
     setMounted(true);
   }, []);
 
+  // Sidebar is collapsed by default, expands on hover
+  const isCollapsed = !isHovered;
+
   return (
     <div
       className={cn(
-        "relative flex h-full flex-col bg-background transition-all duration-300",
+        "relative flex h-full flex-col bg-background transition-all duration-300 border-r border-border/50",
         isCollapsed ? "w-16" : "w-56"
       )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex items-center justify-between p-4 pb-2">
-        {!isCollapsed && (
+      <div className="flex items-center justify-center p-4 pb-2">
+        {!isCollapsed ? (
           <div className="flex items-center gap-2 px-2">
             <img 
               src={mounted && theme === 'dark' ? "/logo-dark.svg" : "/logo.svg"} 
@@ -75,15 +79,15 @@ export function Sidebar() {
               className="h-25 w-auto" 
             />
           </div>
+        ) : (
+          <div className="flex items-center justify-center">
+            <img 
+              src={mounted && theme === 'dark' ? "/logo-dark.svg" : "/logo.svg"} 
+              alt="Logo" 
+              className="h-8 w-8 object-contain" 
+            />
+          </div>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn("h-8 w-8", isCollapsed ? "mx-auto" : "")}
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
       </div>
       <nav className="flex flex-col gap-1 px-2">
         {/* ทั่วไป Section */}
@@ -110,8 +114,8 @@ export function Sidebar() {
               )}
               title={isCollapsed ? item.title : undefined}
             >
-              <Icon className="h-4 w-4" />
-              {!isCollapsed && <span>{item.title}</span>}
+              <Icon className="h-4 w-4 flex-shrink-0" />
+              {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">{item.title}</span>}
             </Link>
           );
         })}
@@ -142,8 +146,8 @@ export function Sidebar() {
                   )}
                   title={isCollapsed ? item.title : undefined}
                 >
-                  <Icon className="h-4 w-4" />
-                  {!isCollapsed && <span>{item.title}</span>}
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">{item.title}</span>}
                 </Link>
               );
             })}
