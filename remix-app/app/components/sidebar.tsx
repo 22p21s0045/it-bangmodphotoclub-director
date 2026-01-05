@@ -84,7 +84,7 @@ export function Sidebar() {
             <img 
               src={mounted && theme === 'dark' ? "/images/sidebar/logo-minimal-dark.png" : "/images/sidebar/logo-minimal-light.png"} 
               alt="Logo" 
-              className="h-8 w-8 object-contain" 
+              className="h-18 w-18 object-contain" 
             />
           </div>
         )}
