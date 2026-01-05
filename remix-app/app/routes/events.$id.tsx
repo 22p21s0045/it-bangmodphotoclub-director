@@ -7,7 +7,7 @@ import { EventDetailSkeleton } from "~/components/skeletons";
 import axios from "axios";
 import { format, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download, Palette, Trash2, CheckSquare, Square, X, CalendarPlus, ExternalLink, FileSpreadsheet } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ArrowLeft, Users, Clock, Image as ImageIcon, FileText, Upload, ChevronDown, Download, Sparkles, Trash2, CheckSquare, Square, X, CalendarPlus, ExternalLink, FileSpreadsheet } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { EditEventDialog } from "~/components/edit-event-dialog";
 import { AssignUserDialog } from "~/components/assign-user-dialog";
@@ -415,7 +415,7 @@ export default function EventDetail() {
                             className={activeGalleryTab === 'EDITED' ? 'bg-green-600 hover:bg-green-700' : 'border-green-500 text-green-600'}
                             onClick={() => setActiveGalleryTab('EDITED')}
                           >
-                            <Palette className="w-4 h-4 mr-1" />
+                            <Sparkles className="w-4 h-4 mr-1" />
                             แต่งแล้ว ({resolvedEvent.photos?.filter((p: Photo) => p.type === 'EDITED').length || 0})
                           </Button>
                         </div>
@@ -574,7 +574,7 @@ export default function EventDetail() {
                                     {photo.type === 'EDITED' && (
                                       <div className="absolute top-1 right-1">
                                         <Badge className="bg-green-500 text-white text-xs px-1">
-                                          <Palette className="w-3 h-3" />
+                                          <Sparkles className="w-3 h-3" />
                                         </Badge>
                                       </div>
                                     )}
@@ -612,7 +612,7 @@ export default function EventDetail() {
                                   </>
                                 ) : (
                                   <>
-                                    <Palette className="w-12 h-12 mb-3 opacity-20 text-green-500" />
+                                    <Sparkles className="w-12 h-12 mb-3 opacity-20 text-green-500" />
                                     <p>ยังไม่มีรูปที่แต่งแล้ว</p>
                                     <Button 
                                       variant="link" 

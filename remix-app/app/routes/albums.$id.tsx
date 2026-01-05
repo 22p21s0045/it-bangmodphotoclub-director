@@ -189,8 +189,8 @@ export default function AlbumDetailPage() {
                   key={photo.id} 
                   className={cn(
                     "break-inside-avoid group relative overflow-hidden rounded-lg bg-muted cursor-pointer transition-all",
-                    selectionMode && "ring-2 ring-offset-2",
-                    selectionMode && isSelected ? "ring-primary" : "ring-transparent"
+                    (selectionMode || isSelected) && "ring-2 ring-offset-2",
+                    isSelected ? "ring-primary" : "ring-transparent"
                   )}
                   onClick={() => {
                     if (selectionMode) {
@@ -206,40 +206,48 @@ export default function AlbumDetailPage() {
                     className={cn(
                       "w-full h-auto object-cover transition-all duration-300",
                       selectionMode ? "" : "group-hover:scale-105",
-                      selectionMode && isSelected && "opacity-80"
+                      isSelected && "opacity-80"
                     )}
                     loading="lazy"
                   />
                   
-                  {/* Selection Checkbox */}
-                  {selectionMode && (
-                    <div className={cn(
-                      "absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                  {/* Google Photos-style hover checkbox (top-left) */}
+                  <div 
+                    className={cn(
+                      "absolute top-2 left-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all z-10",
                       isSelected 
-                        ? "bg-primary border-primary text-primary-foreground" 
-                        : "bg-white/80 border-gray-400"
-                    )}>
-                      {isSelected && <Check className="w-4 h-4" />}
-                    </div>
-                  )}
+                        ? "bg-primary border-primary text-primary-foreground opacity-100" 
+                        : "bg-white/90 border-gray-300 opacity-0 group-hover:opacity-100 hover:border-primary hover:bg-primary/10"
+                    )}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!selectionMode) {
+                        setSelectionMode(true);
+                      }
+                      togglePhoto(photo.id);
+                    }}
+                  >
+                    {isSelected && <Check className="w-4 h-4" />}
+                  </div>
 
-                  {/* Hover overlay (only when not in selection mode) */}
-                  {!selectionMode && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="absolute bottom-0 left-0 right-0 p-3">
-                        <p className="text-white text-xs truncate">{photo.filename}</p>
-                        {photo.type && (
-                          <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-medium ${
-                            photo.type === 'EDITED' 
-                              ? 'bg-green-500/80 text-white' 
-                              : 'bg-orange-500/80 text-white'
-                          }`}>
-                            {photo.type === 'EDITED' ? 'แต่งแล้ว' : 'RAW'}
-                          </span>
-                        )}
-                      </div>
+                  {/* Hover overlay with gradient and info */}
+                  <div className={cn(
+                    "absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300",
+                    selectionMode || isSelected ? "opacity-30" : "opacity-0 group-hover:opacity-100"
+                  )}>
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className="text-white text-xs truncate">{photo.filename}</p>
+                      {photo.type && (
+                        <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-medium ${
+                          photo.type === 'EDITED' 
+                            ? 'bg-green-500/80 text-white' 
+                            : 'bg-orange-500/80 text-white'
+                        }`}>
+                          {photo.type === 'EDITED' ? 'แต่งแล้ว' : 'RAW'}
+                        </span>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
