@@ -154,15 +154,7 @@ export function PhotoPreviewDialog({
       >
         {/* Top Bar */}
         <div className="h-14 flex-shrink-0 flex items-center justify-between px-4 bg-black/90 border-b border-white/10 z-20">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-white/20"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="w-6 h-6" />
-          </Button>
-          
+          {/* Left side - Action buttons */}
           <div className="flex items-center gap-2">
             <span className="text-white/70 text-sm mr-2">
               {currentIndex + 1} / {photos.length}
@@ -199,6 +191,16 @@ export function PhotoPreviewDialog({
               </a>
             </Button>
           </div>
+          
+          {/* Right side - Close button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white hover:bg-white/20"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="w-6 h-6" />
+          </Button>
         </div>
 
         {/* Main Content Area */}
